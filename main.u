@@ -12,13 +12,13 @@ pretty_main
 
 	auto SDL_WINDOWPOS_CENTERED= 0x2FFF0000;
 
-	var i32 window_width= 640, window_height= 480;
+	var u32 window_width= 640u, window_height= 480u;
 
 	var $(SDL_Window_) window=
 		unsafe( SDL_CreateWindow(
 			$<(window_title_nt[0]),
 			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-			window_width, window_height,
+			i32(window_width), i32(window_height),
 			0u ) );
 
 	var $(SDL_Surface) surface_ptr= unsafe( SDL_GetWindowSurface( window ) );
@@ -32,6 +32,8 @@ pretty_main
 	}
 
 	var SDL_Surface& surface= unsafe( $>(surface_ptr) );
+
+	var u32 mut iteration= 0u;
 
 	loop label main_loop
 	{
@@ -64,19 +66,26 @@ pretty_main
 			}
 		}
 
-		var $(u32) dst_colors= unsafe( ust::byte_ptr_cast</u32/>( surface.pixels ) );
-		var u32 pitch = u32( surface.pitch ) / u32( typeinfo</u32/>.size_of );
+		type Color32= u32;
+
+		var $(Color32) dst_colors= unsafe( ust::byte_ptr_cast</Color32/>( surface.pixels ) );
+		var u32 pitch = u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
 		for( var u32 mut y= 0u; y < u32( surface.h ); ++y )
 		{
+			var $(Color32) line_dst= unsafe( dst_colors + y * pitch );
 			for( var u32 mut x= 0u; x < u32( surface.w ); ++x )
 			{
-				unsafe( $>( dst_colors + x + y * pitch ) ) = 0x00FF00FFu;
+				unsafe( $>( line_dst + x ) )=
+					( x * 255u / window_width ) |
+					(( y * 255u / window_height ) << 8u) |
+					(((iteration << 1u) & 255u) << 16u);
 			}
 		}
+		++iteration;
 
 		unsafe( SDL_UpdateWindowSurface( window ) );
 
-		unsafe( SDL_Delay( 100u ) );
+		unsafe( SDL_Delay( 16u ) );
 	}
 
 	unsafe( SDL_DestroyWindow( window ) );
