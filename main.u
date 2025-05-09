@@ -40,7 +40,7 @@ pretty_main
 		var SDL_Event mut event= zero_init;
 		while( unsafe( SDL_PollEvent( $<(event) ) ) != 0 )
 		{
-			var i32 t= i32( i64( event.union_contents[0] ) );
+			var SDL_EventType t( i64( event.union_contents[0] ) );
 			if( t == SDL_QUIT )
 			{
 				ust::stdout_print( "Quit event\n" );
@@ -49,7 +49,7 @@ pretty_main
 			if( t == SDL_WINDOWEVENT )
 			{
 				auto& windows_event= unsafe( cast_ref_unsafe</SDL_WindowEvent/>( event ) );
-				if( i32( windows_event.event ) == SDL_WINDOWEVENT_CLOSE )
+				if( SDL_WindowEventID( windows_event.event ) == SDL_WINDOWEVENT_CLOSE )
 				{
 					ust::stdout_print( "Window close event\n" );
 					break label main_loop;
