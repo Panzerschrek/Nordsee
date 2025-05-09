@@ -27,7 +27,7 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 
 	target.generated_private_header_files.push_back( sdl_header_converted_base_name );
 
-	var ust::filesystem_path cpp_header_converter_path= ust::path::join( bin_path_opt.try_deref(), "u.._cpp_header_converter" );
+	var ust::filesystem_path cpp_header_converter_path= ust::path::join( bin_path_opt.try_deref(), "u.._cpp_header_converter.exe" );
 
 	var BK::CustomBuildStep mut sdl_header_step
 	{
