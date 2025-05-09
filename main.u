@@ -41,8 +41,26 @@ pretty_main
 			var i32 t= i32( i64( event.union_contents[0] ) );
 			if( t == SDL_QUIT )
 			{
-				ust::stdout_print( "Quit detected\n" );
+				ust::stdout_print( "Quit event\n" );
 				break label main_loop;
+			}
+			if( t == SDL_WINDOWEVENT )
+			{
+				auto& windows_event= unsafe( cast_ref_unsafe</SDL_WindowEvent/>( event ) );
+				if( i32( windows_event.event ) == SDL_WINDOWEVENT_CLOSE )
+				{
+					ust::stdout_print( "Window close event\n" );
+					break label main_loop;
+				}
+			}
+			if( t == SDL_KEYDOWN )
+			{
+				auto& keyboard_event= unsafe( cast_ref_unsafe</SDL_KeyboardEvent/>( event ) );
+				if( keyboard_event.keysym.scancode == SDL_SCANCODE_ESCAPE )
+				{
+					ust::stdout_print( "Esc pressed\n" );
+					break label main_loop;
+				}
 			}
 		}
 
