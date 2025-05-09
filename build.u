@@ -31,7 +31,10 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 	auto build_system_executable_path= build_system_interface.GetBuildSystemExecutablePath();
 	auto bin_path_opt= ust::path::get_parent_path( build_system_executable_path );
 
-	var ust::filesystem_path sdl_header= ust::path::join( sdl_install_prefix, "include/SDL.h" );
+	var ust::filesystem_path sdl_header=
+		( is_host_windows
+			? ust::path::join( sdl_install_prefix, "include/SDL.h" )
+			: ust::filesystem_path( "/usr/include/SDL2/SDL.h" ) );
 
 	var ust::filesystem_path sdl_header_converted_base_name= "SDL.uh";
 
