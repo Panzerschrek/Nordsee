@@ -4,6 +4,40 @@ import "/Nordsee/SDL.uh"
 
 pretty_main
 {
+	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
+
+	auto mut window_title_nt= "Nordsee\0";
+
+	auto SDL_WINDOWPOS_CENTERED= 0x2FFF0000;
+
+	var i32 window_width= 640, window_height= 480;
+
+	var $(SDL_Window_) window=
+		unsafe( SDL_CreateWindow(
+			$<(window_title_nt[0]),
+			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+			window_width, window_height,
+			0u ) );
+
 	ust::stdout_print( "Nordsee\n" );
+
+	loop label main_loop
+	{
+		var SDL_Event mut event= zero_init;
+		while( unsafe( SDL_PollEvent( $<(event) ) ) != 0 )
+		{
+			var i32 t= i32( i64( event.union_contents[0] ) );
+			if( t == SDL_QUIT )
+			{
+				ust::stdout_print( "Quit detected\n" );
+				break label main_loop;
+			}
+		}
+
+		unsafe( SDL_Delay( 100u ) );
+	}
+
+	unsafe( SDL_DestroyWindow( window ) );
+
 	return 0;
 }

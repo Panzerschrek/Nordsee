@@ -11,6 +11,8 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 		.source_files= ust::make_array</ ust::string8 />( "main.u" ),
 	};
 
+	target.external_libraries.push_back( "C:/Users/user/Documents/Projects/other/SDL2-2.0.20-vc/lib/x64/SDL2.lib" );
+
 	auto build_system_executable_path= build_system_interface.GetBuildSystemExecutablePath();
 	auto bin_path_opt= ust::path::get_parent_path( build_system_executable_path );
 
