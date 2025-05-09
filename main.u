@@ -1,5 +1,6 @@
 import "/main_wrapper.u"
 import "/stdout.u"
+import "/Nordsee/SDL.uh"
 
 pretty_main
 {

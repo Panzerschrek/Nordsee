@@ -1,8 +1,8 @@
+import "/path_utils.u"
 import "/build_system.uh"
 
 fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::PackageInfo
 {
-	ust::ignore_unused( build_system_interface );
 
 	var BK::BuildTarget mut target
 	{
@@ -11,5 +11,37 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 		.source_files= ust::make_array</ ust::string8 />( "main.u" ),
 	};
 
-	return BK::PackageInfo{ .build_targets= ust::make_array( move(target) ) };
+	auto build_system_executable_path= build_system_interface.GetBuildSystemExecutablePath();
+	auto bin_path_opt= ust::path::get_parent_path( build_system_executable_path );
+
+	var ust::filesystem_path sdl_header= "C:/Users/user/Documents/Projects/other/SDL2-2.0.20-vc/include/SDL.h";
+
+	var ust::filesystem_path sdl_header_converted_base_name= "SDL.uh";
+
+	var ust::filesystem_path sdl_header_converted=
+		ust::path::join(
+			build_system_interface.GetCurrentPackageBuildTargetGeneratedSourcesDirectory( target.name ),
+			sdl_header_converted_base_name );
+
+	target.generated_private_header_files.push_back( sdl_header_converted_base_name );
+
+	var ust::filesystem_path cpp_header_converter_path= ust::path::join( bin_path_opt.try_deref(), "u.._cpp_header_converter" );
+
+	var BK::CustomBuildStep mut sdl_header_step
+	{
+		.command= BK::CustomBuildStep::ExeCommand
+		{
+			.exe_path= cpp_header_converter_path,
+			.command_line= ust::make_array</ust::string8/>( sdl_header, "-o", sdl_header_converted, "--", "-std=c11" ),
+		},
+		.comment= sdl_header_converted_base_name,
+		.input_files= ust::make_array( sdl_header ),
+		.output_files= ust::make_array( sdl_header_converted ),
+	};
+
+	return BK::PackageInfo
+	{
+		.build_targets= ust::make_array( move(target) ),
+		.custom_build_steps= ust::make_array( move(sdl_header_step) ),
+	};
 }
