@@ -66,6 +66,13 @@ pretty_main
 			}
 		}
 
+		var bool must_lock_surface= ( surface.flags & u32(SDL_RLEACCEL) ) != 0u;
+
+		if( must_lock_surface )
+		{
+			unsafe( SDL_LockSurface( surface_ptr ) );
+		}
+
 		type Color32= u32;
 
 		var $(Color32) dst_colors= unsafe( ust::byte_ptr_cast</Color32/>( surface.pixels ) );
@@ -82,6 +89,11 @@ pretty_main
 			}
 		}
 		++iteration;
+
+		if( must_lock_surface )
+		{
+			unsafe( SDL_UnlockSurface( surface_ptr ) );
+		}
 
 		unsafe( SDL_UpdateWindowSurface( window ) );
 
