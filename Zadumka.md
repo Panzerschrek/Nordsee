@@ -1,10 +1,3 @@
-Öö
-Žž
-ç
-Šš
-Üü
-Ää
-
 ### Zadumka
 
 Sutj idei - napisatj simuläçiju volnujuscejsä morskoj poverhnosti i vizualizirovatj jejo.
