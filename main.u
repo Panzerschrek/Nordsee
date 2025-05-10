@@ -67,7 +67,31 @@ pretty_main
 				(normal[0] * sun_dir[0] + normal[1] * sun_dir[1] + normal[2] * sun_dir[2]) /
 				ust::sqrt((normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]) * sun_dir_squared);
 
-			var f32 sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
+			var f32 mut sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
+
+			{
+				// Trace ray towards the sun up to maximum possible hight.
+				var [ f32, 3 ] mut pos[ (x), (y), adjacent_cells[1][1] ];
+
+				while (pos[2] <  256.0f)
+				{
+					pos[0] += sun_dir[0];
+					pos[1] += sun_dir[1];
+					pos[2] += sun_dir[2];
+
+					var u32 address =
+						u32(i32(ust::floor(pos[0])) & i32(hightmap_size_mask)) +
+						u32((i32(ust::floor(pos[1])) & i32(hightmap_size_mask)) << hightmap_size_log2);
+
+					if(pos[2] < hightmap_data[size_type(address)].height)
+					{
+						// In shadow.
+						sub_dir_dot_clampled = 0.0f;
+						break;
+					}
+				}
+			}
+
 			var f32 light = 0.3f + 0.69f * sub_dir_dot_clampled;
 
 			var u32 address = x + (y << hightmap_size_log2);
@@ -167,9 +191,7 @@ pretty_main
 
 		var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
 
-		// Use initial coordinates far from zero in order to avoid incorrect hightmap coordinates rounding for negative coordinates.
-		var f32 cam_initial_shift = 8.0f * f32(hightmap_size);
-		var [ f32, 3 ] cam_position[ cam_initial_shift, cam_initial_shift + time * move_speed, 240.0f ];
+		var [ f32, 3 ] cam_position[ 0.0f, time * move_speed, 240.0f ];
 		var f32 additional_y_shift = 0.7f;
 
 		var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
@@ -187,7 +209,7 @@ pretty_main
 
 			var i32 mut prev_y = surface.h;
 
-			for( var f32 mut depth = 30.0f; depth < max_depth; depth *= 1.005f)
+			for( var f32 mut depth = 30.0f; depth < max_depth; depth *= 1.0035f)
 			{
 				var [ f32, 2 ] ray_vec[ ray_x * depth, depth ];
 				var [ f32, 2 ] ray_vec_rotated[ ray_vec[0] * cam_angle_cos - ray_vec[1] * cam_angle_sin, ray_vec[0] * cam_angle_sin + ray_vec[1] * cam_angle_cos ];
@@ -196,8 +218,8 @@ pretty_main
 				// Use conversion to int rather than proper floor.
 				// It isn't correct for negative numbers, but fine, since we shift camera coordinates to positive values.
 				var u32 address =
-					u32(i32(terrain_pos[0]) & i32(hightmap_size_mask)) +
-					u32((i32(terrain_pos[1]) & i32(hightmap_size_mask)) << hightmap_size_log2);
+					u32(i32(ust::floor(terrain_pos[0])) & i32(hightmap_size_mask)) +
+					u32((i32(ust::floor(terrain_pos[1])) & i32(hightmap_size_mask)) << hightmap_size_log2);
 
 				var TerrainElement& el = hightmap_data[size_type(address)];
 
