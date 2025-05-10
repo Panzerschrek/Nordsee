@@ -21,10 +21,24 @@ struct Vec2
 		return ThisType( l.x + r.x, l.y + r.y );
 	}
 
+	// Add vector to this.
+	op+=( mut this, ThisType& other )
+	{
+		this.x += other.x;
+		this.y += other.y;
+	}
+
 	// Subtract vectors.
 	op-( ThisType& l, ThisType& r ) : ThisType
 	{
 		return ThisType( l.x - r.x, l.y - r.y);
+	}
+
+	// Subtract a vector from this.
+	op-=( mut this, ThisType& other )
+	{
+		this.x -= other.x;
+		this.y -= other.y;
 	}
 
 	// Get inverted vector.
@@ -45,10 +59,24 @@ struct Vec2
 		return ThisType( v.x * scalar, v.y * scalar );
 	}
 
+	// Multiply this vector by scalar.
+	op*=( mut this, T scalar )
+	{
+		x *= scalar;
+		y *= scalar;
+	}
+
 	// Divide vector by scalar.
 	op/( ThisType& v, T scalar ) : ThisType
 	{
 		return ThisType( v.x / scalar, v.y / scalar);
+	}
+
+	// Divide this vector by scalar.
+	op/=( mut this, T scalar )
+	{
+		x /= scalar;
+		y /= scalar;
 	}
 
 	// Component-wise multiplication.
@@ -106,10 +134,26 @@ struct Vec3
 		return ThisType( l.x + r.x, l.y + r.y, l.z + r.z );
 	}
 
+	// Add vector to this.
+	op+=( mut this, ThisType& other )
+	{
+		this.x += other.x;
+		this.y += other.y;
+		this.z += other.z;
+	}
+
 	// Subtract vectors.
 	op-( ThisType& l, ThisType& r ) : ThisType
 	{
 		return ThisType( l.x - r.x, l.y - r.y, l.z - r.z );
+	}
+
+	// Subtract a vector from this.
+	op-=( mut this, ThisType& other )
+	{
+		this.x -= other.x;
+		this.y -= other.y;
+		this.z -= other.z;
 	}
 
 	// Get inverted vector.
@@ -130,10 +174,26 @@ struct Vec3
 		return ThisType( v.x * scalar, v.y * scalar, v.z * scalar );
 	}
 
+	// Multiply this vector by scalar.
+	op*=( mut this, T scalar )
+	{
+		x *= scalar;
+		y *= scalar;
+		z *= scalar;
+	}
+
 	// Divide vector by scalar.
 	op/( ThisType& v, T scalar ) : ThisType
 	{
 		return ThisType( v.x / scalar, v.y / scalar, v.z / scalar );
+	}
+
+	// Divide this vector by scalar.
+	op/=( mut this, T scalar )
+	{
+		x /= scalar;
+		y /= scalar;
+		z /= scalar;
 	}
 
 	// Component-wise multiplication.

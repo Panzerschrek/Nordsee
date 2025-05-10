@@ -18,4 +18,8 @@ fn CameraController::GetElevation(this) : f32
 	return elevation_;
 }
 
+fn CameraController::Update( mut this, f32 delta_time_s, ust::array_view_imut</bool/> keyboard_state )
+{
+}
+
 } // namespace NS
