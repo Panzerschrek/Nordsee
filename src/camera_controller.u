@@ -3,4 +3,19 @@ import "camera_controller.uh"
 namespace NS
 {
 
+fn CameraController::GetPos(this) : Vec3f
+{
+	return pos_;
+}
+
+fn CameraController::GetAzimuth(this) : f32
+{
+	return azimuth_;
+}
+
+fn CameraController::GetElevation(this) : f32
+{
+	return elevation_;
+}
+
 } // namespace NS

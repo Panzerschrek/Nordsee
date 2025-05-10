@@ -1,10 +1,21 @@
+import "vec.uh"
+
 namespace NS
 {
 
 class CameraController
 {
 public:
+	fn constructor()= default;
+
+	fn GetPos(this) : Vec3f;
+	fn GetAzimuth(this) : f32;
+	fn GetElevation(this) : f32;
+
 private:
+	Vec3f pos_( 0.0f, 0.0f, 0.0f );
+	f32 azimuth_= 0.0f;
+	f32 elevation_= 0.0f;
 }
 
 } // namespace NS
