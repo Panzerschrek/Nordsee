@@ -151,6 +151,7 @@ fn Main() : i32
 	var u64 mut prev_tick= unsafe( SDL_GetPerformanceCounter() );
 	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
 
+	var ust::vector</bool/> mut keyboard_state;
 	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 180.0f ) );
 
 	loop label main_loop
@@ -185,7 +186,6 @@ fn Main() : i32
 			}
 		}
 
-		var ust::vector</bool/> mut keyboard_state;
 		{
 			var i32 mut key_count= 0;
 			var $(Uint8) keyboard_state_raw= unsafe( SDL_GetKeyboardState( $<( key_count ) ) );
