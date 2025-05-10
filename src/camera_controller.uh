@@ -13,7 +13,7 @@ public:
 	fn GetAzimuth(this) : f32;
 	fn GetElevation(this) : f32;
 
-	fn Update( mut this, f32 delta_time_s, ust::array_view_imut</bool/> keyboard_state );
+	fn Update( mut this, f32 time_delta_s, ust::array_view_imut</bool/> keyboard_state );
 
 private:
 	Vec3f pos_( 0.0f, 0.0f, 0.0f );
