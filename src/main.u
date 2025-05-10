@@ -4,7 +4,17 @@ import "/stdout.u"
 import "/vector.u"
 import "/Nordsee/SDL.uh"
 
+
 pretty_main
+{
+	// Place actual main inside out "NS" namespace.
+	return NS::Main();
+}
+
+namespace NS
+{
+
+fn Main() : i32
 {
 	var u32 hightmap_size_log2= 10u;
 	var u32 hightmap_size= 1u << hightmap_size_log2;
@@ -358,3 +368,5 @@ fn Noise2( i32 x, i32 y, i32 seed) : i32
 	n = (n >> 13u) ^ n;
 	return ((n * (n * n * 60493 + 19990303) + 1376312589) & 0x7fffffff) >> 15u;
 }
+
+} // namespace NS
