@@ -207,7 +207,21 @@ fn Main() : i32
 			unsafe( SDL_LockSurface( surface_ptr ) );
 		}
 
-		DrawHeightmap(heightmap_size_log2, heightmap_data, camera_controller, surface);
+		var u32 pitch=  u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
+
+		DrawHeightmap(
+			heightmap_size_log2,
+			heightmap_data,
+			camera_controller,
+			DrawableSurface
+			{
+				.w( surface.w ),
+				.h( surface.h ),
+				.pitch= pitch,
+				.data= unsafe( ust::array_view_mut</Color32/>(
+					ust::byte_ptr_cast</Color32/>( surface.pixels ),
+					size_type( pitch * u32(surface.h) ) ) ),
+			});
 
 		if( must_lock_surface )
 		{
@@ -311,17 +325,22 @@ fn Noise2( i32 x, i32 y, i32 seed) : i32
 	return ((n * (n * n * 60493 + 19990303) + 1376312589) & 0x7fffffff) >> 15u;
 }
 
+struct DrawableSurface
+{
+	u32 w;
+	u32 h;
+	u32 pitch;
+	ust::array_view_mut</Color32/> data;
+}
+
 fn DrawHeightmap(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</TerrainElement/> heightmap_data,
 	CameraController& camera_controller,
-	SDL_Surface& surface )
+	DrawableSurface& surface )
 {
 	var u32 heightmap_size = 1u << heightmap_size_log2;
 	var u32 heightmap_size_mask= heightmap_size - 1u;
-
-	var $(Color32) dst_colors= unsafe( ust::byte_ptr_cast</Color32/>( surface.pixels ) );
-	var u32 pitch = u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
 
 	var f32 max_depth = f32(heightmap_size) * 1.5f;
 
@@ -341,9 +360,9 @@ fn DrawHeightmap(
 	{
 		var f32 ray_offset = (f32(surface.w) * 0.5f - f32(x)) / screen_scale;
 
-		var $(Color32) dst_column = unsafe( dst_colors + x );
+		auto dst_column= surface.data.subrange_start( size_type(x) );
 
-		var i32 mut prev_y = surface.h;
+		var i32 mut prev_y( surface.h );
 
 		for( var f32 mut depth= 2.0f; depth < max_depth; depth *= 1.004f )
 		{
@@ -374,7 +393,7 @@ fn DrawHeightmap(
 			var i32 min_y= ust::max(y, 0);
 			for( var i32 mut dst_y = prev_y - 1; dst_y >= min_y; --dst_y)
 			{
-				unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = color;
+				dst_column[ size_type( u32(dst_y) * surface.pitch ) ]= color;
 			}
 
 			prev_y = min_y;
@@ -383,7 +402,7 @@ fn DrawHeightmap(
 		// Fill remaining sky with fog.
 		for(var i32 mut dst_y = prev_y - 1; dst_y >= 0; --dst_y)
 		{
-			unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = c_sky_color;
+			dst_column[ size_type( u32(dst_y) * surface.pitch ) ]= c_sky_color;
 		}
 	}
 }
