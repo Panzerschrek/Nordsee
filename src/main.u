@@ -236,15 +236,17 @@ fn Main() : i32
 
 			for( var f32 mut depth = 30.0f; depth < max_depth; depth *= 1.0035f)
 			{
-				var [ f32, 2 ] ray_vec[ depth, -ray_x * depth ];
-				var [ f32, 2 ] ray_vec_rotated[ ray_vec[0] * ray_rotate_cos - ray_vec[1] * ray_rotate_sin, ray_vec[1] * ray_rotate_cos + ray_vec[0] * ray_rotate_sin ];
-				var [ f32, 2 ] terrain_pos[ ray_vec_rotated[0] + cam_position.x, ray_vec_rotated[1] + cam_position.y ];
+				var Vec2f ray_vec( depth, -ray_x * depth );
+				var Vec2f ray_vec_rotated(
+					ray_vec.x * ray_rotate_cos - ray_vec.y * ray_rotate_sin,
+					ray_vec.y * ray_rotate_cos + ray_vec.x * ray_rotate_sin );
+				var Vec2f terrain_pos= ray_vec_rotated + Vec2f( cam_position.x, cam_position.y );
 
 				// Use conversion to int rather than proper floor.
 				// It isn't correct for negative numbers, but fine, since we shift camera coordinates to positive values.
 				var u32 address =
-					u32(i32(ust::floor(terrain_pos[0])) & i32(hightmap_size_mask)) +
-					u32((i32(ust::floor(terrain_pos[1])) & i32(hightmap_size_mask)) << hightmap_size_log2);
+					u32(i32(ust::floor(terrain_pos.x)) & i32(hightmap_size_mask)) +
+					u32((i32(ust::floor(terrain_pos.y)) & i32(hightmap_size_mask)) << hightmap_size_log2);
 
 				var TerrainElement& el = hightmap_data[size_type(address)];
 
