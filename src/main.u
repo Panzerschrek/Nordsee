@@ -17,110 +17,12 @@ namespace NS
 
 fn Main() : i32
 {
-	var u32 heightmap_size_log2= 10u;
-	var u32 heightmap_size= 1u << heightmap_size_log2;
-	var u32 heightmap_size_mask= heightmap_size - 1u;
-
-	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_size * heightmap_size ), 0.0f );
-
-	for( auto mut y= 0u; y < heightmap_size; ++y )
-	{
-		for( auto mut x= 0u; x < heightmap_size; ++x )
-		{
-			var u32 min_octave = 2u;
-			var u32 max_octave = 8u;
-
-			var u32 mut r = 0u;
-			for(var u32 mut i = min_octave; i <= max_octave; ++i)
-			{
-				r += InterpolatedNoise(x, y, heightmap_size_log2, i) >> (max_octave  - i);
-			}
-
-			// Scale and clamp to water level.
-			var f32 h = ust::max(77.0f, f32(r) / 512.0f);
-
-			var u32 address = x + (y << heightmap_size_log2);
-			heightmap_data[size_type(address)] = h;
-		}
-	}
-
-	var ust::vector</Color32/> mut color_data( heightmap_data.size(), Color32(0u) );
-
-	var [ f32, 3 ] sun_dir[ 0.7f, 0.3f, 0.6f ];
-	var f32 sun_dir_squared = sun_dir[0] * sun_dir[0] + sun_dir[1] * sun_dir[1] + sun_dir[2] * sun_dir[2];
-
-	for( auto mut y= 0u; y < heightmap_size; ++y )
-	{
-		for( auto mut x= 0u; x < heightmap_size; ++x )
-		{
-			var [ [ f32, 3 ], 3 ] mut adjacent_cells = zero_init;
-			for(var i32 mut dx = 0; dx < 3; ++dx)
-			{
-				for(var i32 mut dy = 0; dy < 3; ++dy)
-				{
-					var u32 address =
-						u32((i32(x) + dx - 1) & i32(heightmap_size_mask)) +
-						u32(((i32(y) + dy - 1) & i32(heightmap_size_mask)) << heightmap_size_log2);
-					adjacent_cells[u32(dx)][u32(dy)] = heightmap_data[size_type(address)];
-				}
-			}
-
-			var f32 dh_dx =
-				(adjacent_cells[2][0] + adjacent_cells[2][1] + adjacent_cells[2][2]) -
-				(adjacent_cells[0][0] + adjacent_cells[0][1] + adjacent_cells[0][2]);
-
-			var f32 dh_dy =
-				(adjacent_cells[0][2] + adjacent_cells[1][2] + adjacent_cells[2][2]) -
-				(adjacent_cells[0][0] + adjacent_cells[1][0] + adjacent_cells[2][0]);
-
-			var [ f32, 3 ] normal[ -dh_dx, -dh_dy, 3.0f ];
-
-			var f32 angle_cos =
-				(normal[0] * sun_dir[0] + normal[1] * sun_dir[1] + normal[2] * sun_dir[2]) /
-				ust::sqrt((normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]) * sun_dir_squared);
-
-			var f32 mut sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
-
-			{
-				// Trace ray towards the sun up to maximum possible hight.
-				var [ f32, 3 ] mut pos[ (x), (y), adjacent_cells[1][1] ];
-
-				while (pos[2] <  256.0f)
-				{
-					pos[0] += sun_dir[0];
-					pos[1] += sun_dir[1];
-					pos[2] += sun_dir[2];
-
-					var u32 address =
-						u32(i32(ust::floor(pos[0])) & i32(heightmap_size_mask)) +
-						u32((i32(ust::floor(pos[1])) & i32(heightmap_size_mask)) << heightmap_size_log2);
-
-					if(pos[2] < heightmap_data[size_type(address)])
-					{
-						// In shadow.
-						sub_dir_dot_clampled = 0.0f;
-						break;
-					}
-				}
-			}
-
-			var f32 light = 0.3f + 0.69f * sub_dir_dot_clampled;
-
-			var u32 address = x + (y << heightmap_size_log2);
-			var f32 height= heightmap_data[size_type(address)];
-
-			var [ f32, 3 ] color= GetTerrainColor( height );
-
-			color_data[size_type(address)] =
-				Color32(
-					u32(color[0] * light) |
-					(u32(color[1] * light) << 8u) |
-					(u32(color[2] * light) << 16u) );
-
-		}
-	}
-
 	ust::stdout_print( "Nordsee\n" );
+
+	var u32 heightmap_size_log2= 10u;
+
+	var ust::vector</f32/> heightmap_data= GenerateNoiseHeightmap( heightmap_size_log2 );
+	var ust::vector</Color32/> color_data= GenerateHeightmapColors( heightmap_size_log2, heightmap_data );
 
 	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
 
@@ -238,6 +140,122 @@ fn Main() : i32
 	unsafe( SDL_Quit() );
 
 	return 0;
+}
+
+fn GenerateNoiseHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
+{
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+
+	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_size * heightmap_size ), 0.0f );
+
+	for( auto mut y= 0u; y < heightmap_size; ++y )
+	{
+		for( auto mut x= 0u; x < heightmap_size; ++x )
+		{
+			var u32 min_octave = 2u;
+			var u32 max_octave = 8u;
+
+			var u32 mut r = 0u;
+			for(var u32 mut i = min_octave; i <= max_octave; ++i)
+			{
+				r += InterpolatedNoise(x, y, heightmap_size_log2, i) >> (max_octave  - i);
+			}
+
+			// Scale and clamp to water level.
+			var f32 h = ust::max(77.0f, f32(r) / 512.0f);
+
+			var u32 address = x + (y << heightmap_size_log2);
+			heightmap_data[size_type(address)] = h;
+		}
+	}
+
+	return heightmap_data;
+}
+
+fn GenerateHeightmapColors(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> heightmap_data ) : ust::vector</Color32/>
+{
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+	var u32 heightmap_size_mask= heightmap_size - 1u;
+
+	var ust::vector</Color32/> mut color_data( heightmap_data.size(), Color32(0u) );
+
+	var [ f32, 3 ] sun_dir[ 0.7f, 0.3f, 0.6f ];
+	var f32 sun_dir_squared = sun_dir[0] * sun_dir[0] + sun_dir[1] * sun_dir[1] + sun_dir[2] * sun_dir[2];
+
+	for( auto mut y= 0u; y < heightmap_size; ++y )
+	{
+		for( auto mut x= 0u; x < heightmap_size; ++x )
+		{
+			var [ [ f32, 3 ], 3 ] mut adjacent_cells = zero_init;
+			for(var i32 mut dx = 0; dx < 3; ++dx)
+			{
+				for(var i32 mut dy = 0; dy < 3; ++dy)
+				{
+					var u32 address =
+						u32((i32(x) + dx - 1) & i32(heightmap_size_mask)) +
+						u32(((i32(y) + dy - 1) & i32(heightmap_size_mask)) << heightmap_size_log2);
+					adjacent_cells[u32(dx)][u32(dy)] = heightmap_data[size_type(address)];
+				}
+			}
+
+			var f32 dh_dx =
+				(adjacent_cells[2][0] + adjacent_cells[2][1] + adjacent_cells[2][2]) -
+				(adjacent_cells[0][0] + adjacent_cells[0][1] + adjacent_cells[0][2]);
+
+			var f32 dh_dy =
+				(adjacent_cells[0][2] + adjacent_cells[1][2] + adjacent_cells[2][2]) -
+				(adjacent_cells[0][0] + adjacent_cells[1][0] + adjacent_cells[2][0]);
+
+			var [ f32, 3 ] normal[ -dh_dx, -dh_dy, 3.0f ];
+
+			var f32 angle_cos =
+				(normal[0] * sun_dir[0] + normal[1] * sun_dir[1] + normal[2] * sun_dir[2]) /
+				ust::sqrt((normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]) * sun_dir_squared);
+
+			var f32 mut sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
+
+			{
+				// Trace ray towards the sun up to maximum possible hight.
+				var [ f32, 3 ] mut pos[ (x), (y), adjacent_cells[1][1] ];
+
+				while (pos[2] <  256.0f)
+				{
+					pos[0] += sun_dir[0];
+					pos[1] += sun_dir[1];
+					pos[2] += sun_dir[2];
+
+					var u32 address =
+						u32(i32(ust::floor(pos[0])) & i32(heightmap_size_mask)) +
+						u32((i32(ust::floor(pos[1])) & i32(heightmap_size_mask)) << heightmap_size_log2);
+
+					if(pos[2] < heightmap_data[size_type(address)])
+					{
+						// In shadow.
+						sub_dir_dot_clampled = 0.0f;
+						break;
+					}
+				}
+			}
+
+			var f32 light = 0.3f + 0.69f * sub_dir_dot_clampled;
+
+			var u32 address = x + (y << heightmap_size_log2);
+			var f32 height= heightmap_data[size_type(address)];
+
+			var [ f32, 3 ] color= GetTerrainColor( height );
+
+			color_data[size_type(address)] =
+				Color32(
+					u32(color[0] * light) |
+					(u32(color[1] * light) << 8u) |
+					(u32(color[2] * light) << 16u) );
+
+		}
+	}
+
+	return color_data;
 }
 
 type Color32= u32;
