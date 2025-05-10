@@ -172,6 +172,19 @@ pretty_main
 			}
 		}
 
+		var ust::vector</bool/> mut keyboard_state;
+		{
+			var i32 mut key_count= 0;
+			var $(Uint8) keyboard_state_raw= unsafe( SDL_GetKeyboardState( $<( key_count ) ) );
+
+			keyboard_state.resize( size_type( key_count ), false );
+
+			for( auto mut i= 0s; i < size_type(key_count); ++i )
+			{
+				keyboard_state[i]= unsafe( $>( keyboard_state_raw + i ) ) != Uint8(0);
+			}
+		}
+
 		var bool must_lock_surface= ( surface.flags & u32(SDL_RLEACCEL) ) != 0u;
 
 		if( must_lock_surface )
