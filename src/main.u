@@ -151,7 +151,7 @@ fn Main() : i32
 	var u64 start_tick= unsafe( SDL_GetPerformanceCounter() );
 	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
 
-	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 240.0f ) );
+	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 128.0f ) );
 
 	loop label main_loop
 	{
@@ -217,7 +217,7 @@ fn Main() : i32
 		var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
 
 		var Vec3f cam_position= camera_controller.GetPos();
-		var f32 additional_y_shift = 0.7f;
+		var f32 additional_y_shift = -ust::tan( camera_controller.GetElevation() );
 
 		var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
 
