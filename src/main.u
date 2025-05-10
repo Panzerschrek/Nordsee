@@ -26,18 +26,22 @@ fn Main() : i32
 
 	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
 
-	auto mut window_title_nt= "Nordsee\0";
-
 	auto SDL_WINDOWPOS_CENTERED= 0x2FFF0000;
 
 	var u32 window_width= 1024u, window_height= 768u;
 
 	var $(SDL_Window_) window=
 		unsafe( SDL_CreateWindow(
-			$<(window_title_nt[0]),
+			$<( cast_mut( "Nordsee\0"[0] ) ),
 			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 			i32(window_width), i32(window_height),
 			0u ) );
+
+	if( ust::is_nullptr( window ) )
+	{
+		ust::stderr_print( "Failed to create window!\n" );
+		return -1;
+	}
 
 	var $(SDL_Surface) surface_ptr= unsafe( SDL_GetWindowSurface( window ) );
 
@@ -48,8 +52,6 @@ fn Main() : i32
 		ust::stderr_print( "Invalid window surface!\n" );
 		return -1;
 	}
-
-	var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 
 	var u64 mut prev_tick= unsafe( SDL_GetPerformanceCounter() );
 	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
@@ -103,6 +105,8 @@ fn Main() : i32
 
 		camera_controller.Update( time_delta_s, keyboard_state );
 
+		var SDL_Surface& surface= unsafe( $>(surface_ptr) );
+
 		var bool must_lock_surface= ( surface.flags & u32(SDL_RLEACCEL) ) != 0u;
 
 		if( must_lock_surface )
@@ -110,7 +114,7 @@ fn Main() : i32
 			unsafe( SDL_LockSurface( surface_ptr ) );
 		}
 
-		var u32 pitch=  u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
+		var u32 pitch= u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
 
 		DrawHeightmap(
 			heightmap_size_log2,
