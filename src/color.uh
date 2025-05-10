@@ -1,0 +1,7 @@
+namespace NS
+{
+
+// 8 bits per component, 4 components.
+type Color32= u32;
+
+} // namespace NS
