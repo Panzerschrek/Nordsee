@@ -6,7 +6,7 @@ import "/Nordsee/SDL.uh"
 
 pretty_main
 {
-	var u32 hightmap_size_log2= 9u;
+	var u32 hightmap_size_log2= 10u;
 	var u32 hightmap_size= 1u << hightmap_size_log2;
 	var u32 hightmap_size_mask= hightmap_size - 1u;
 
@@ -51,7 +51,7 @@ pretty_main
 
 	auto SDL_WINDOWPOS_CENTERED= 0x2FFF0000;
 
-	var u32 window_width= 640u, window_height= 480u;
+	var u32 window_width= 1024u, window_height= 768u;
 
 	var $(SDL_Window_) window=
 		unsafe( SDL_CreateWindow(
@@ -74,8 +74,15 @@ pretty_main
 
 	var u32 mut iteration= 0u;
 
+	var u64 start_tick= unsafe( SDL_GetPerformanceCounter() );
+	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
+
 	loop label main_loop
 	{
+		var u64 cur_tick = unsafe( SDL_GetPerformanceCounter() );
+
+		var f32 time( f64(cur_tick - start_tick) / performace_counter_frequency );
+
 		var SDL_Event mut event= zero_init;
 		while( unsafe( SDL_PollEvent( $<(event) ) ) != 0 )
 		{
@@ -126,8 +133,6 @@ pretty_main
 			}
 		}
 		++iteration;
-
-		var f32 time= 0.0f;
 
 		var f32 move_speed = 40.0f;
 
@@ -191,8 +196,6 @@ pretty_main
 		}
 
 		unsafe( SDL_UpdateWindowSurface( window ) );
-
-		unsafe( SDL_Delay( 16u ) );
 	}
 
 	unsafe( SDL_DestroyWindow( window ) );
