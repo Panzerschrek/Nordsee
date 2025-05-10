@@ -4,6 +4,32 @@ import "/Nordsee/SDL.uh"
 
 pretty_main
 {
+	var u32 hightmap_size_log2= 8u;
+	var u32 highmap_size= 1u << hightmap_size_log2;
+
+	var [ f32, highmap_size * highmap_size ] mut highmap_data= zero_init;
+
+	for( auto mut y= 0u; y < highmap_size; ++y )
+	{
+		for( auto mut x= 0u; x < highmap_size; ++x )
+		{
+			var u32 min_octave = 2u;
+			var u32 max_octave = 8u;
+
+			var u32 mut r = 0u;
+			for(var u32 mut i = min_octave; i <= max_octave; ++i)
+			{
+				r += InterpolatedNoise(x, y, hightmap_size_log2, i) >> (max_octave  - i);
+			}
+
+			// Scale and clamp to water level.
+			var f32 h = ust::max(77.0f, f32(r) / 512.0f);
+
+			var u32 address = x + (y << hightmap_size_log2);
+			highmap_data[address] = h;
+		}
+	}
+
 	ust::stdout_print( "Nordsee\n" );
 
 	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
@@ -103,4 +129,50 @@ pretty_main
 	unsafe( SDL_DestroyWindow( window ) );
 
 	return 0;
+}
+
+fn InterpolatedNoise(u32 x, u32 y, u32 size_log2, u32 k) : u32
+{
+	var u32 step = 1u << k;
+	var u32 mask = ((1u << size_log2) >> k) - 1u; // This makes noise tileable.
+
+	var u32 X = x >> k;
+	var u32 Y = y >> k;
+
+	var [ u32, 4 ] noise
+	[
+		u32(Noise2(i32((X     ) & mask), i32((Y     ) & mask), 0)),
+		u32(Noise2(i32((X + 1u) & mask), i32((Y     ) & mask), 0)),
+		u32(Noise2(i32((X + 1u) & mask), i32((Y + 1u) & mask), 0)),
+		u32(Noise2(i32((X     ) & mask), i32((Y + 1u) & mask), 0))
+	];
+
+	var u32 dx = x - (X << k);
+	var u32 dy = y - (Y << k);
+
+	var [ u32, 2 ] interp_x
+	[
+		dy * noise[3] + (step - dy) * noise[0],
+		dy * noise[2] + (step - dy) * noise[1],
+	];
+	return u32((interp_x[1] * dx + interp_x[0] * (step - dx)) >> (k + k));
+}
+
+
+fn Noise2( i32 x, i32 y, i32 seed) : i32
+{
+	var i32 X_NOISE_GEN = 1619;
+	var i32 Y_NOISE_GEN = 31337;
+	var i32 Z_NOISE_GEN = 6971;
+	var i32 SEED_NOISE_GEN = 1013;
+
+	var i32 mut n = (
+		X_NOISE_GEN * x +
+		Y_NOISE_GEN * y +
+		Z_NOISE_GEN * 0 +
+		SEED_NOISE_GEN * seed)
+		& 0x7fffffff;
+
+	n = (n >> 13u) ^ n;
+	return ((n * (n * n * 60493 + 19990303) + 1376312589) & 0x7fffffff) >> 15u;
 }
