@@ -257,6 +257,8 @@ pretty_main
 
 	unsafe( SDL_DestroyWindow( window ) );
 
+	unsafe( SDL_Quit() );
+
 	return 0;
 }
 
