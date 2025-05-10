@@ -222,8 +222,8 @@ fn Main() : i32
 		var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
 
 		var f32 cam_angle = camera_controller.GetAzimuth();
-		var f32 cam_angle_cos = ust::cos(cam_angle);
-		var f32 cam_angle_sin = ust::sin(cam_angle);
+		var f32 ray_rotate_cos = ust::cos(cam_angle);
+		var f32 ray_rotate_sin = ust::sin(cam_angle);
 
 		// Process columns.
 		for( var u32 mut x= 0u; x < u32( surface.w ); ++x )
@@ -236,8 +236,8 @@ fn Main() : i32
 
 			for( var f32 mut depth = 30.0f; depth < max_depth; depth *= 1.0035f)
 			{
-				var [ f32, 2 ] ray_vec[ ray_x * depth, depth ];
-				var [ f32, 2 ] ray_vec_rotated[ ray_vec[0] * cam_angle_cos - ray_vec[1] * cam_angle_sin, ray_vec[0] * cam_angle_sin + ray_vec[1] * cam_angle_cos ];
+				var [ f32, 2 ] ray_vec[ depth, -ray_x * depth ];
+				var [ f32, 2 ] ray_vec_rotated[ ray_vec[0] * ray_rotate_cos - ray_vec[1] * ray_rotate_sin, ray_vec[1] * ray_rotate_cos + ray_vec[0] * ray_rotate_sin ];
 				var [ f32, 2 ] terrain_pos[ ray_vec_rotated[0] + cam_position.x, ray_vec_rotated[1] + cam_position.y ];
 
 				// Use conversion to int rather than proper floor.

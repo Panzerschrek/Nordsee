@@ -38,12 +38,12 @@ fn CameraController::Update( mut this, f32 time_delta_s, ust::array_view_imut</b
 		key_turn_down(SDL_SCANCODE_DOWN);
 
 	var f32 c_pi= 3.1415926535f;
-	var f32 speed= 1.0f;
+	var f32 speed= 40.0f;
 	var f32 vertical_speed= speed * 0.8f;
 	var f32 angle_speed= 1.0f;
 
-	var Vec3f forward_vector(-ust::sin(azimuth_), ust::cos(azimuth_), 0.0f);
-	var Vec3f left_vector(ust::cos(azimuth_), ust::sin(azimuth_), 0.0f);
+	var Vec3f forward_vector(ust::cos(azimuth_), ust::sin(azimuth_), 0.0f);
+	var Vec3f left_vector(-ust::sin(azimuth_), ust::cos(azimuth_), 0.0f);
 
 	var Vec3f mut move_vector(0.0f, 0.0f, 0.0f);
 
@@ -85,7 +85,7 @@ fn CameraController::Update( mut this, f32 time_delta_s, ust::array_view_imut</b
 	}
 	if( key_turn_right < keyboard_state.size() && keyboard_state[ key_turn_right ] )
 	{
-		azimuth_ += angle_speed * time_delta_s;
+		azimuth_ -= angle_speed * time_delta_s;
 	}
 	if( key_turn_up < keyboard_state.size() && keyboard_state[ key_turn_up ] )
 	{
