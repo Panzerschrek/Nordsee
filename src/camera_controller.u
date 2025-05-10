@@ -1,0 +1,119 @@
+import "/Nordsee/SDL.uh"
+import "camera_controller.uh"
+
+namespace NS
+{
+
+fn CameraController::constructor( Vec3f& pos )
+	( pos_= pos )
+{}
+
+fn CameraController::GetPos(this) : Vec3f
+{
+	return pos_;
+}
+
+fn CameraController::GetAzimuth(this) : f32
+{
+	return azimuth_;
+}
+
+fn CameraController::GetElevation(this) : f32
+{
+	return elevation_;
+}
+
+fn CameraController::Update( mut this, f32 time_delta_s, ust::array_view_imut</bool/> keyboard_state )
+{
+	var size_type
+		key_move_forward(SDL_SCANCODE_W),
+		key_move_backward(SDL_SCANCODE_S),
+		key_move_left(SDL_SCANCODE_A),
+		key_move_right(SDL_SCANCODE_D),
+		key_move_up(SDL_SCANCODE_SPACE),
+		key_move_down(SDL_SCANCODE_C),
+		key_turn_left(SDL_SCANCODE_LEFT),
+		key_turn_right(SDL_SCANCODE_RIGHT),
+		key_turn_up(SDL_SCANCODE_UP),
+		key_turn_down(SDL_SCANCODE_DOWN);
+
+	var f32 c_pi= 3.1415926535f;
+	var f32 speed= 48.0f;
+	var f32 vertical_speed= speed;
+	var f32 angle_speed= 1.0f;
+	var f32 max_elevation= c_pi * 3.0f / 8.0f;
+
+	var Vec3f forward_vector(ust::cos(azimuth_), ust::sin(azimuth_), 0.0f);
+	var Vec3f left_vector(-ust::sin(azimuth_), ust::cos(azimuth_), 0.0f);
+
+	var Vec3f mut move_vector(0.0f, 0.0f, 0.0f);
+
+	if( key_move_forward < keyboard_state.size() && keyboard_state[ key_move_forward ] )
+	{
+		move_vector+= forward_vector;
+	}
+	if( key_move_backward < keyboard_state.size() && keyboard_state[ key_move_backward ] )
+	{
+		move_vector-= forward_vector;
+	}
+	if( key_move_left < keyboard_state.size() && keyboard_state[ key_move_left ] )
+	{
+		move_vector+= left_vector;
+	}
+	if( key_move_right < keyboard_state.size() && keyboard_state[ key_move_right ] )
+	{
+		move_vector-= left_vector;
+	}
+
+	var f32 move_vector_length= move_vector.Length();
+	if(move_vector_length > 0.0f)
+	{
+		pos_+= move_vector * (time_delta_s * speed / move_vector_length);
+	}
+
+	if( key_move_up < keyboard_state.size() && keyboard_state[ key_move_up ] )
+	{
+		pos_.z+= vertical_speed * time_delta_s;
+	}
+	if( key_move_down < keyboard_state.size() && keyboard_state[ key_move_down ] )
+	{
+		pos_.z-= vertical_speed * time_delta_s;
+	}
+
+	if( key_turn_left < keyboard_state.size() && keyboard_state[ key_turn_left ] )
+	{
+		azimuth_ += angle_speed * time_delta_s;
+	}
+	if( key_turn_right < keyboard_state.size() && keyboard_state[ key_turn_right ] )
+	{
+		azimuth_ -= angle_speed * time_delta_s;
+	}
+	if( key_turn_up < keyboard_state.size() && keyboard_state[ key_turn_up ] )
+	{
+		elevation_ += angle_speed * time_delta_s;
+	}
+	if( key_turn_down < keyboard_state.size() && keyboard_state[ key_turn_down ] )
+	{
+		elevation_ -= angle_speed * time_delta_s;
+	}
+
+	while(azimuth_ >  c_pi)
+	{
+		azimuth_-= 2.0f * c_pi;
+	}
+	while(azimuth_ < -c_pi)
+	{
+		azimuth_+= 2.0f * c_pi;
+	}
+
+	if( elevation_ > max_elevation )
+	{
+		elevation_= max_elevation;
+	}
+	if( elevation_ < -max_elevation )
+	{
+		elevation_= -max_elevation;
+	}
+}
+
+} // namespace NS

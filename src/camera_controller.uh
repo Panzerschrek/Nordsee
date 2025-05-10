@@ -1,0 +1,24 @@
+import "/random_access_range.u"
+import "vec.uh"
+
+namespace NS
+{
+
+class CameraController
+{
+public:
+	fn constructor( Vec3f& pos );
+
+	fn GetPos(this) : Vec3f;
+	fn GetAzimuth(this) : f32;
+	fn GetElevation(this) : f32;
+
+	fn Update( mut this, f32 time_delta_s, ust::array_view_imut</bool/> keyboard_state );
+
+private:
+	Vec3f pos_( 0.0f, 0.0f, 0.0f );
+	f32 azimuth_= 0.0f;
+	f32 elevation_= 0.0f;
+}
+
+} // namespace NS

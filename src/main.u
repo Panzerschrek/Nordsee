@@ -3,8 +3,19 @@ import "/math.u"
 import "/stdout.u"
 import "/vector.u"
 import "/Nordsee/SDL.uh"
+import "camera_controller.uh"
+
 
 pretty_main
+{
+	// Place actual main inside our "NS" namespace.
+	return NS::Main();
+}
+
+namespace NS
+{
+
+fn Main() : i32
 {
 	var u32 hightmap_size_log2= 10u;
 	var u32 hightmap_size= 1u << hightmap_size_log2;
@@ -137,14 +148,16 @@ pretty_main
 
 	var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 
-	var u64 start_tick= unsafe( SDL_GetPerformanceCounter() );
+	var u64 mut prev_tick= unsafe( SDL_GetPerformanceCounter() );
 	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
+
+	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 180.0f ) );
 
 	loop label main_loop
 	{
 		var u64 cur_tick = unsafe( SDL_GetPerformanceCounter() );
-
-		var f32 time( f64(cur_tick - start_tick) / performace_counter_frequency );
+		var f32 time_delta_s( ust::min( f64(cur_tick - prev_tick) / performace_counter_frequency, 0.5 ) );
+		prev_tick= cur_tick;
 
 		var SDL_Event mut event= zero_init;
 		while( unsafe( SDL_PollEvent( $<(event) ) ) != 0 )
@@ -172,6 +185,21 @@ pretty_main
 			}
 		}
 
+		var ust::vector</bool/> mut keyboard_state;
+		{
+			var i32 mut key_count= 0;
+			var $(Uint8) keyboard_state_raw= unsafe( SDL_GetKeyboardState( $<( key_count ) ) );
+
+			keyboard_state.resize( size_type( key_count ), false );
+
+			for( auto mut i= 0s; i < size_type(key_count); ++i )
+			{
+				keyboard_state[i]= unsafe( $>( keyboard_state_raw + i ) ) != Uint8(0);
+			}
+		}
+
+		camera_controller.Update( time_delta_s, keyboard_state );
+
 		var bool must_lock_surface= ( surface.flags & u32(SDL_RLEACCEL) ) != 0u;
 
 		if( must_lock_surface )
@@ -182,45 +210,45 @@ pretty_main
 		var $(Color32) dst_colors= unsafe( ust::byte_ptr_cast</Color32/>( surface.pixels ) );
 		var u32 pitch = u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
 
-		var f32 move_speed = 40.0f;
-
 		var f32 max_depth = f32(hightmap_size) * 1.5f;
 
 		var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
 
-		var [ f32, 3 ] cam_position[ 0.0f, time * move_speed, 240.0f ];
-		var f32 additional_y_shift = 0.7f;
+		var Vec3f cam_pos= camera_controller.GetPos();
+		var f32 additional_y_shift = -ust::tan( camera_controller.GetElevation() );
 
 		var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
 
-		var f32 cam_angle = time * (-0.06f);
-		var f32 cam_angle_cos = ust::cos(cam_angle);
-		var f32 cam_angle_sin = ust::sin(cam_angle);
+		var f32 cam_angle = camera_controller.GetAzimuth();
+		var f32 ray_rotate_cos = ust::cos(cam_angle);
+		var f32 ray_rotate_sin = ust::sin(cam_angle);
 
 		// Process columns.
 		for( var u32 mut x= 0u; x < u32( surface.w ); ++x )
 		{
-			var f32 ray_x = (f32(x) - f32(surface.w) * 0.5f) / screen_scale;
+			var f32 ray_offset = (f32(surface.w) * 0.5f - f32(x)) / screen_scale;
 
 			var $(Color32) dst_column = unsafe( dst_colors + x );
 
 			var i32 mut prev_y = surface.h;
 
-			for( var f32 mut depth = 30.0f; depth < max_depth; depth *= 1.0035f)
+			for( var f32 mut depth= 2.0f; depth < max_depth; depth *= 1.004f )
 			{
-				var [ f32, 2 ] ray_vec[ ray_x * depth, depth ];
-				var [ f32, 2 ] ray_vec_rotated[ ray_vec[0] * cam_angle_cos - ray_vec[1] * cam_angle_sin, ray_vec[0] * cam_angle_sin + ray_vec[1] * cam_angle_cos ];
-				var [ f32, 2 ] terrain_pos[ ray_vec_rotated[0] + cam_position[0], ray_vec_rotated[1] + cam_position[1] ];
+				var Vec2f ray_vec( depth, ray_offset * depth );
+				var Vec2f ray_vec_rotated(
+					ray_vec.x * ray_rotate_cos - ray_vec.y * ray_rotate_sin,
+					ray_vec.y * ray_rotate_cos + ray_vec.x * ray_rotate_sin );
+				var Vec2f terrain_pos= ray_vec_rotated + Vec2f( cam_pos.x, cam_pos.y );
 
 				// Use conversion to int rather than proper floor.
 				// It isn't correct for negative numbers, but fine, since we shift camera coordinates to positive values.
 				var u32 address =
-					u32(i32(ust::floor(terrain_pos[0])) & i32(hightmap_size_mask)) +
-					u32((i32(ust::floor(terrain_pos[1])) & i32(hightmap_size_mask)) << hightmap_size_log2);
+					u32(i32(ust::floor(terrain_pos.x)) & i32(hightmap_size_mask)) +
+					u32((i32(ust::floor(terrain_pos.y)) & i32(hightmap_size_mask)) << hightmap_size_log2);
 
 				var TerrainElement& el = hightmap_data[size_type(address)];
 
-				var f32 screen_y = (el.height - cam_position[2]) / depth;
+				var f32 screen_y = (el.height - cam_pos.z) / depth;
 				var i32 y(((1.0f - additional_y_shift) - screen_y) * screen_scale);
 
 				if(y >= prev_y)
@@ -228,10 +256,12 @@ pretty_main
 					continue;
 				}
 
+				var Color32 color= el.color;
+
 				var i32 min_y= ust::max(y, 0);
 				for( var i32 mut dst_y = prev_y - 1; dst_y >= min_y; --dst_y)
 				{
-					unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = el.color;
+					unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = color;
 				}
 
 				prev_y = min_y;
@@ -345,3 +375,5 @@ fn Noise2( i32 x, i32 y, i32 seed) : i32
 	n = (n >> 13u) ^ n;
 	return ((n * (n * n * 60493 + 19990303) + 1376312589) & 0x7fffffff) >> 15u;
 }
+
+} // namespace NS
