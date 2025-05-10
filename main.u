@@ -10,7 +10,7 @@ pretty_main
 	var u32 hightmap_size= 1u << hightmap_size_log2;
 	var u32 hightmap_size_mask= hightmap_size - 1u;
 
-	var ust::vector</f32/> mut hightmap_data( size_type( hightmap_size * hightmap_size ), 0.0f );
+	var ust::vector</TerrainElement/> mut hightmap_data( size_type( hightmap_size * hightmap_size ), TerrainElement{ .height= 0.0f, .color= 0u } );
 
 	for( auto mut y= 0u; y < hightmap_size; ++y )
 	{
@@ -29,7 +29,17 @@ pretty_main
 			var f32 h = ust::max(77.0f, f32(r) / 512.0f);
 
 			var u32 address = x + (y << hightmap_size_log2);
-			hightmap_data[size_type(address)] = h * 1.5f;
+			var TerrainElement &mut el= hightmap_data[size_type(address)];
+
+			el.height = h;
+
+			var [ f32, 3 ] color= GetTerrainColor( h );
+
+			el.color =
+				Color32(
+					u32(color[0]) |
+					(u32(color[1]) << 8u) |
+					(u32(color[2]) << 16u) );
 		}
 	}
 
@@ -102,8 +112,6 @@ pretty_main
 			unsafe( SDL_LockSurface( surface_ptr ) );
 		}
 
-		type Color32= u32;
-
 		var $(Color32) dst_colors= unsafe( ust::byte_ptr_cast</Color32/>( surface.pixels ) );
 		var u32 pitch = u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
 		for( var u32 mut y= 0u; y < u32( surface.h ); ++y )
@@ -157,9 +165,9 @@ pretty_main
 					u32(i32(terrain_pos[0]) & i32(hightmap_size_mask)) +
 					u32((i32(terrain_pos[1]) & i32(hightmap_size_mask)) << hightmap_size_log2);
 
-				var f32 h = hightmap_data[size_type(address)];
+				var TerrainElement& el = hightmap_data[size_type(address)];
 
-				var f32 screen_y = (h - cam_position[2]) / depth;
+				var f32 screen_y = (el.height - cam_position[2]) / depth;
 				var i32 y(((1.0f - additional_y_shift) - screen_y) * screen_scale);
 
 				if(y >= prev_y)
@@ -168,13 +176,10 @@ pretty_main
 				}
 
 				var i32 min_y= ust::max(y, 0);
-				/*
 				for( var i32 mut dst_y = prev_y - 1; dst_y >= min_y; --dst_y)
 				{
-					unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = 0xFFFFFFFFu;
-				}*/
-
-				unsafe( $>( dst_column + u32(min_y) * pitch ) ) = 0xFFFFFFFFu;
+					unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = el.color;
+				}
 
 				prev_y = min_y;
 			}
@@ -194,6 +199,47 @@ pretty_main
 
 	return 0;
 }
+
+struct TerrainElement
+{
+	f32 height;
+	Color32 color;
+}
+
+type Color32= u32;
+
+fn GetTerrainColor(f32 h) : [ f32, 3 ]
+{
+	var f32 half_border = 7.0f;
+
+	for( var u32 mut i = 0u; i + 1u < c_num_terrain_colors; ++i)
+	{
+		if(h <= c_terrain_borders[i])
+		{
+			var f32 k = ust::min(1.0f, (c_terrain_borders[i] - h) / half_border);
+			var f32 one_minus_k = 1.0f - k;
+			return ust::make_array(
+				c_terrain_colors[i][0] * k + c_terrain_colors[i+1u][0] * one_minus_k,
+				c_terrain_colors[i][1] * k + c_terrain_colors[i+1u][1] * one_minus_k,
+				c_terrain_colors[i][2] * k + c_terrain_colors[i+1u][2] * one_minus_k );
+		}
+	}
+
+	return c_terrain_colors[c_num_terrain_colors - 1u];
+}
+
+var u32 c_num_terrain_colors = 6u;
+var [ f32, c_num_terrain_colors ] c_terrain_borders[ 83.0f, 90.0f, 110.0f, 145.0f, 160.0f, 1000000.0f ];
+
+var [ [ f32, 3 ], c_num_terrain_colors ] c_terrain_colors
+[
+	[ 200.0f, 120.0f, 110.0f ],
+	[ 60.0f, 170.0f, 170.0f ],
+	[ 70.0f, 190.0f, 70.0f ],
+	[ 80.0f, 128.0f, 80.0f ],
+	[ 110.0f, 110.0f, 110.0f ],
+	[ 255.0f, 255.0f, 255.0f ],
+];
 
 fn InterpolatedNoise(u32 x, u32 y, u32 size_log2, u32 k) : u32
 {
