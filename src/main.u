@@ -148,16 +148,16 @@ fn Main() : i32
 
 	var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 
-	var u64 start_tick= unsafe( SDL_GetPerformanceCounter() );
+	var u64 mut prev_tick= unsafe( SDL_GetPerformanceCounter() );
 	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
 
-	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 128.0f ) );
+	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 180.0f ) );
 
 	loop label main_loop
 	{
 		var u64 cur_tick = unsafe( SDL_GetPerformanceCounter() );
-
-		var f32 time( f64(cur_tick - start_tick) / performace_counter_frequency );
+		var f32 time_delta_s( ust::min( f64(cur_tick - prev_tick) / performace_counter_frequency, 0.5 ) );
+		prev_tick= cur_tick;
 
 		var SDL_Event mut event= zero_init;
 		while( unsafe( SDL_PollEvent( $<(event) ) ) != 0 )
@@ -198,9 +198,7 @@ fn Main() : i32
 			}
 		}
 
-		// TODO - use time properly
-		ust::ignore_unused(time);
-		camera_controller.Update( 1.0f / 60.0f /*TODO*/, keyboard_state );
+		camera_controller.Update( time_delta_s, keyboard_state );
 
 		var bool must_lock_surface= ( surface.flags & u32(SDL_RLEACCEL) ) != 0u;
 
