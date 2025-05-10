@@ -1,0 +1,95 @@
+import "/math.u"
+
+namespace NS
+{
+
+template</type T/>
+struct Vec3
+{
+	type ThisType= Vec3</T/>;
+
+	fn constructor( T in_x, T in_y, T in_z )
+		( x= in_x, y= in_y, z= in_z )
+	{}
+
+	// Add two vectors.
+	op+( ThisType& l, ThisType& r ) : ThisType
+	{
+		return ThisType( l.x + r.x, l.y + r.y, l.z + r.z );
+	}
+
+	// Subtract vectors.
+	op-( ThisType& l, ThisType& r ) : ThisType
+	{
+		return ThisType( l.x - r.x, l.y - r.y, l.z - r.z );
+	}
+
+	// Get inverted vector.
+	op-( ThisType& v ) : ThisType
+	{
+		return ThisType( -v.x, -v.y, -v.z );
+	}
+
+	// Multiply vector by scalar.
+	op*( ThisType& v, T scalar ) : ThisType
+	{
+		return ThisType( v.x * scalar, v.y * scalar, v.z * scalar );
+	}
+
+	// Multiply vector by scalar.
+	op*( T scalar, ThisType& v ) : ThisType
+	{
+		return ThisType( v.x * scalar, v.y * scalar, v.z * scalar );
+	}
+
+	// Divide vector by scalar.
+	op/( ThisType& v, T scalar ) : ThisType
+	{
+		return ThisType( v.x / scalar, v.y / scalar, v.z / scalar );
+	}
+
+	// Component-wise multiplication.
+	op*( ThisType& l, ThisType& r ) : ThisType
+	{
+		return ThisType( l.x * r.x, l.y * r.y, l.z * r.z );
+	}
+
+	// Dot-product (with scalar result).
+	fn Dot( this, ThisType& other ) : T
+	{
+		return this.x * other.x + this.y * other.y + this.z * other.z;
+	}
+
+	fn Length( this ) : T
+	{
+		return ust::sqrt( x * x + y * y + z * z );
+	}
+
+	fn SquareLength( this ) : T
+	{
+		return x * x + y * y + z * z;
+	}
+
+	// Get normalized version of this vector. Result is NaN if length is zero.
+	fn GetNormalized( this ) : ThisType
+	{
+		return this / Length();
+	}
+
+	// Perform in-place normalization.
+	fn Normalize( mut this )
+	{
+		var T length= Length();
+		x/= length;
+		y/= length;
+		z/= length;
+	}
+
+	T x;
+	T y;
+	T z;
+}
+
+type Vec3f= Vec3</f32/>;
+
+} // namespace NS
