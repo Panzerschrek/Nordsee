@@ -3,6 +3,7 @@ import "/math.u"
 import "/stdout.u"
 import "/vector.u"
 import "/Nordsee/SDL.uh"
+import "camera_controller.uh"
 
 
 pretty_main
@@ -150,6 +151,8 @@ fn Main() : i32
 	var u64 start_tick= unsafe( SDL_GetPerformanceCounter() );
 	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
 
+	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 240.0f ) );
+
 	loop label main_loop
 	{
 		var u64 cur_tick = unsafe( SDL_GetPerformanceCounter() );
@@ -195,6 +198,10 @@ fn Main() : i32
 			}
 		}
 
+		// TODO - use time properly
+		ust::ignore_unused(time);
+		camera_controller.Update( 1.0f / 60.0f /*TODO*/, keyboard_state );
+
 		var bool must_lock_surface= ( surface.flags & u32(SDL_RLEACCEL) ) != 0u;
 
 		if( must_lock_surface )
@@ -205,18 +212,16 @@ fn Main() : i32
 		var $(Color32) dst_colors= unsafe( ust::byte_ptr_cast</Color32/>( surface.pixels ) );
 		var u32 pitch = u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
 
-		var f32 move_speed = 40.0f;
-
 		var f32 max_depth = f32(hightmap_size) * 1.5f;
 
 		var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
 
-		var [ f32, 3 ] cam_position[ 0.0f, time * move_speed, 240.0f ];
+		var Vec3f cam_position= camera_controller.GetPos();
 		var f32 additional_y_shift = 0.7f;
 
 		var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
 
-		var f32 cam_angle = time * (-0.06f);
+		var f32 cam_angle = camera_controller.GetAzimuth();
 		var f32 cam_angle_cos = ust::cos(cam_angle);
 		var f32 cam_angle_sin = ust::sin(cam_angle);
 
@@ -233,7 +238,7 @@ fn Main() : i32
 			{
 				var [ f32, 2 ] ray_vec[ ray_x * depth, depth ];
 				var [ f32, 2 ] ray_vec_rotated[ ray_vec[0] * cam_angle_cos - ray_vec[1] * cam_angle_sin, ray_vec[0] * cam_angle_sin + ray_vec[1] * cam_angle_cos ];
-				var [ f32, 2 ] terrain_pos[ ray_vec_rotated[0] + cam_position[0], ray_vec_rotated[1] + cam_position[1] ];
+				var [ f32, 2 ] terrain_pos[ ray_vec_rotated[0] + cam_position.x, ray_vec_rotated[1] + cam_position.y ];
 
 				// Use conversion to int rather than proper floor.
 				// It isn't correct for negative numbers, but fine, since we shift camera coordinates to positive values.
@@ -243,7 +248,7 @@ fn Main() : i32
 
 				var TerrainElement& el = hightmap_data[size_type(address)];
 
-				var f32 screen_y = (el.height - cam_position[2]) / depth;
+				var f32 screen_y = (el.height - cam_position.z) / depth;
 				var i32 y(((1.0f - additional_y_shift) - screen_y) * screen_scale);
 
 				if(y >= prev_y)

@@ -4,6 +4,10 @@ import "camera_controller.uh"
 namespace NS
 {
 
+fn CameraController::constructor( Vec3f pos )
+	( pos_= pos )
+{}
+
 fn CameraController::GetPos(this) : Vec3f
 {
 	return pos_;
