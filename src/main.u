@@ -232,7 +232,7 @@ fn Main() : i32
 
 			var i32 mut prev_y = surface.h;
 
-			for( var f32 mut depth = 30.0f; depth < max_depth; depth *= 1.0035f)
+			for( var f32 mut depth= 2.0f; depth < max_depth; depth *= 1.004f )
 			{
 				var Vec2f ray_vec( depth, -ray_x * depth );
 				var Vec2f ray_vec_rotated(
@@ -256,10 +256,12 @@ fn Main() : i32
 					continue;
 				}
 
+				var Color32 color= el.color;
+
 				var i32 min_y= ust::max(y, 0);
 				for( var i32 mut dst_y = prev_y - 1; dst_y >= min_y; --dst_y)
 				{
-					unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = el.color;
+					unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = color;
 				}
 
 				prev_y = min_y;
