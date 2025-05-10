@@ -356,53 +356,51 @@ fn DrawHeightmap(
 	var f32 ray_rotate_sin = ust::sin(cam_angle);
 
 	// Process columns.
-	for( var u32 mut x= 0u; x < u32( surface.w ); ++x )
+	for( var u32 mut column= 0u; column < u32( surface.w ); ++column )
 	{
-		var f32 ray_offset = (f32(surface.w) * 0.5f - f32(x)) / screen_scale;
+		var f32 ray_side_offset = (f32(surface.w) * 0.5f - f32(column)) / screen_scale;
 
-		auto dst_column= surface.data.subrange_start( size_type(x) );
+		auto dst_column= surface.data.subrange_start( size_type(column) );
 
-		var i32 mut prev_y( surface.h );
+		var i32 mut prev_row( surface.h );
 
 		for( var f32 mut depth= 2.0f; depth < max_depth; depth *= 1.004f )
 		{
-			var Vec2f ray_vec( depth, ray_offset * depth );
+			var Vec2f ray_vec( depth, ray_side_offset * depth );
 			var Vec2f ray_vec_rotated(
 				ray_vec.x * ray_rotate_cos - ray_vec.y * ray_rotate_sin,
 				ray_vec.y * ray_rotate_cos + ray_vec.x * ray_rotate_sin );
 			var Vec2f terrain_pos= ray_vec_rotated + Vec2f( cam_pos.x, cam_pos.y );
 
-			// Use conversion to int rather than proper floor.
-			// It isn't correct for negative numbers, but fine, since we shift camera coordinates to positive values.
 			var u32 address =
 				u32(i32(ust::floor(terrain_pos.x)) & i32(heightmap_size_mask)) +
 				u32((i32(ust::floor(terrain_pos.y)) & i32(heightmap_size_mask)) << heightmap_size_log2);
 
 			var TerrainElement& el = heightmap_data[size_type(address)];
 
-			var f32 screen_y = (el.height - cam_pos.z) / depth;
-			var i32 y(((1.0f - additional_y_shift) - screen_y) * screen_scale);
+			var f32 screen_row = (el.height - cam_pos.z) / depth;
+			var i32 row(((1.0f - additional_y_shift) - screen_row) * screen_scale);
 
-			if(y >= prev_y)
+			if(row >= prev_row)
 			{
 				continue;
 			}
 
 			var Color32 color= el.color;
 
-			var i32 min_y= ust::max(y, 0);
-			for( var i32 mut dst_y = prev_y - 1; dst_y >= min_y; --dst_y)
+			var i32 min_row= ust::max(row, 0);
+			for( var i32 mut dst_row = prev_row - 1; dst_row >= min_row; --dst_row)
 			{
-				dst_column[ size_type( u32(dst_y) * surface.pitch ) ]= color;
+				dst_column[ size_type( u32(dst_row) * surface.pitch ) ]= color;
 			}
 
-			prev_y = min_y;
+			prev_row = min_row;
 		}
 
 		// Fill remaining sky with fog.
-		for(var i32 mut dst_y = prev_y - 1; dst_y >= 0; --dst_y)
+		for(var i32 mut dst_row = prev_row - 1; dst_row >= 0; --dst_row)
 		{
-			dst_column[ size_type( u32(dst_y) * surface.pitch ) ]= c_sky_color;
+			dst_column[ size_type( u32(dst_row) * surface.pitch ) ]= c_sky_color;
 		}
 	}
 }
