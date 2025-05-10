@@ -30,16 +30,57 @@ pretty_main
 
 			var u32 address = x + (y << hightmap_size_log2);
 			var TerrainElement &mut el= hightmap_data[size_type(address)];
-
 			el.height = h;
+		}
+	}
 
-			var [ f32, 3 ] color= GetTerrainColor( h );
+	var [ f32, 3 ] sun_dir[ 0.7f, 0.3f, 0.6f ];
+	var f32 sun_dir_squared = sun_dir[0] * sun_dir[0] + sun_dir[1] * sun_dir[1] + sun_dir[2] * sun_dir[2];
+
+	for( auto mut y= 0u; y < hightmap_size; ++y )
+	{
+		for( auto mut x= 0u; x < hightmap_size; ++x )
+		{
+			var [ [ f32, 3 ], 3 ] mut adjacent_cells = zero_init;
+			for(var i32 mut dx = 0; dx < 3; ++dx)
+			{
+				for(var i32 mut dy = 0; dy < 3; ++dy)
+				{
+					var u32 address =
+						u32((i32(x) + dx - 1) & i32(hightmap_size_mask)) +
+						u32(((i32(y) + dy - 1) & i32(hightmap_size_mask)) << hightmap_size_log2);
+					adjacent_cells[u32(dx)][u32(dy)] = hightmap_data[size_type(address)].height;
+				}
+			}
+
+			var f32 dh_dx =
+				(adjacent_cells[2][0] + adjacent_cells[2][1] + adjacent_cells[2][2]) -
+				(adjacent_cells[0][0] + adjacent_cells[0][1] + adjacent_cells[0][2]);
+
+			var f32 dh_dy =
+				(adjacent_cells[0][2] + adjacent_cells[1][2] + adjacent_cells[2][2]) -
+				(adjacent_cells[0][0] + adjacent_cells[1][0] + adjacent_cells[2][0]);
+
+			var [ f32, 3 ] normal[ -dh_dx, -dh_dy, 3.0f ];
+
+			var f32 angle_cos =
+				(normal[0] * sun_dir[0] + normal[1] * sun_dir[1] + normal[2] * sun_dir[2]) /
+				ust::sqrt((normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]) * sun_dir_squared);
+
+			var f32 sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
+			var f32 light = 0.3f + 0.69f * sub_dir_dot_clampled;
+
+			var u32 address = x + (y << hightmap_size_log2);
+			var TerrainElement &mut el= hightmap_data[size_type(address)];
+
+			var [ f32, 3 ] color= GetTerrainColor( el.height );
 
 			el.color =
 				Color32(
-					u32(color[0]) |
-					(u32(color[1]) << 8u) |
-					(u32(color[2]) << 16u) );
+					u32(color[0] * light) |
+					(u32(color[1] * light) << 8u) |
+					(u32(color[2] * light) << 16u) );
+
 		}
 	}
 
