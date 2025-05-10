@@ -72,8 +72,6 @@ pretty_main
 
 	var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 
-	var u32 mut iteration= 0u;
-
 	var u64 start_tick= unsafe( SDL_GetPerformanceCounter() );
 	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
 
@@ -121,22 +119,12 @@ pretty_main
 
 		var $(Color32) dst_colors= unsafe( ust::byte_ptr_cast</Color32/>( surface.pixels ) );
 		var u32 pitch = u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
-		for( var u32 mut y= 0u; y < u32( surface.h ); ++y )
-		{
-			var $(Color32) line_dst= unsafe( dst_colors + y * pitch );
-			for( var u32 mut x= 0u; x < u32( surface.w ); ++x )
-			{
-				unsafe( $>( line_dst + x ) )=
-					( x * 255u / window_width ) |
-					(( y * 255u / window_height ) << 8u) |
-					(((iteration << 1u) & 255u) << 16u);
-			}
-		}
-		++iteration;
 
 		var f32 move_speed = 40.0f;
 
 		var f32 max_depth = f32(hightmap_size) * 1.5f;
+
+		var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
 
 		// Use initial coordinates far from zero in order to avoid incorrect hightmap coordinates rounding for negative coordinates.
 		var f32 cam_initial_shift = 8.0f * f32(hightmap_size);
@@ -187,6 +175,12 @@ pretty_main
 				}
 
 				prev_y = min_y;
+			}
+
+			// Fill remaining sky with fog.
+			for(var i32 mut dst_y = prev_y - 1; dst_y >= 0; --dst_y)
+			{
+				unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = c_sky_color;
 			}
 		}
 
