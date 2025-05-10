@@ -152,7 +152,6 @@ pretty_main
 			var SDL_EventType t( i64( event.union_contents[0] ) );
 			if( t == SDL_QUIT )
 			{
-				ust::stdout_print( "Quit event\n" );
 				break label main_loop;
 			}
 			if( t == SDL_WINDOWEVENT )
@@ -160,7 +159,6 @@ pretty_main
 				auto& windows_event= unsafe( cast_ref_unsafe</SDL_WindowEvent/>( event ) );
 				if( SDL_WindowEventID( windows_event.event ) == SDL_WINDOWEVENT_CLOSE )
 				{
-					ust::stdout_print( "Window close event\n" );
 					break label main_loop;
 				}
 			}
@@ -169,7 +167,6 @@ pretty_main
 				auto& keyboard_event= unsafe( cast_ref_unsafe</SDL_KeyboardEvent/>( event ) );
 				if( keyboard_event.keysym.scancode == SDL_SCANCODE_ESCAPE )
 				{
-					ust::stdout_print( "Esc pressed\n" );
 					break label main_loop;
 				}
 			}
