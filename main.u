@@ -1,17 +1,19 @@
 import "/main_wrapper.u"
+import "/math.u"
 import "/stdout.u"
 import "/Nordsee/SDL.uh"
 
 pretty_main
 {
 	var u32 hightmap_size_log2= 8u;
-	var u32 highmap_size= 1u << hightmap_size_log2;
+	var u32 hightmap_size= 1u << hightmap_size_log2;
+	var u32 hightmap_size_mask= hightmap_size - 1u;
 
-	var [ f32, highmap_size * highmap_size ] mut highmap_data= zero_init;
+	var [ f32, hightmap_size * hightmap_size ] mut hightmap_data= zero_init;
 
-	for( auto mut y= 0u; y < highmap_size; ++y )
+	for( auto mut y= 0u; y < hightmap_size; ++y )
 	{
-		for( auto mut x= 0u; x < highmap_size; ++x )
+		for( auto mut x= 0u; x < hightmap_size; ++x )
 		{
 			var u32 min_octave = 2u;
 			var u32 max_octave = 8u;
@@ -26,7 +28,7 @@ pretty_main
 			var f32 h = ust::max(77.0f, f32(r) / 512.0f);
 
 			var u32 address = x + (y << hightmap_size_log2);
-			highmap_data[address] = h;
+			hightmap_data[address] = h;
 		}
 	}
 
@@ -115,6 +117,65 @@ pretty_main
 			}
 		}
 		++iteration;
+
+		var f32 time= 0.0f;
+
+		var f32 move_speed = 40.0f;
+
+		var f32 max_depth = f32(hightmap_size) * 0.7f;
+
+		// Use initial coordinates far from zero in order to avoid incorrect hightmap coordinates rounding for negative coordinates.
+		var f32 cam_initial_shift = 8.0f * f32(hightmap_size);
+		var [ f32, 3 ] cam_position[ cam_initial_shift, cam_initial_shift + time * move_speed, 340.0f ];
+		var f32 additional_y_shift = 0.7f;
+
+		var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
+
+
+		var f32 cam_angle = time * (-0.06f);
+		var f32 cam_angle_cos = ust::cos(cam_angle);
+		var f32 cam_angle_sin = ust::sin(cam_angle);
+
+		// Process columns.
+		for( var u32 mut x= 0u; x < u32( surface.w ); ++x )
+		{
+			var f32 ray_x = (f32(x) - f32(surface.w) * 0.5f) / screen_scale;
+
+			var $(Color32) dst_column = unsafe( dst_colors + x );
+
+			var i32 mut prev_y = surface.h;
+
+			for( var f32 mut depth = 90.0f; depth < max_depth; depth *= 1.0035f)
+			{
+				var [ f32, 2 ] ray_vec[ ray_x * depth, depth ];
+				var [ f32, 2 ] ray_vec_rotated[ ray_vec[0] * cam_angle_cos - ray_vec[1] * cam_angle_sin, ray_vec[0] * cam_angle_sin + ray_vec[1] * cam_angle_cos ];
+				var [ f32, 2 ] terrain_pos[ ray_vec_rotated[0] + cam_position[0], ray_vec_rotated[1] + cam_position[1] ];
+
+				// Use conversion to int rather than proper floor.
+				// It isn't correct for negative numbers, but fine, since we shift camera coordinates to positive values.
+				var u32 address =
+					u32(i32(terrain_pos[0]) & i32(hightmap_size_mask)) +
+					u32((i32(terrain_pos[1]) & i32(hightmap_size_mask)) << hightmap_size_log2);
+
+				var f32 h = hightmap_data[address];
+
+				var i32 screen_y( (h - cam_position[2]) / depth );
+				var i32 y = i32(((1.0f - additional_y_shift) - f32(screen_y)) * screen_scale);
+
+				if(y >= prev_y)
+				{
+					continue;
+				}
+
+				var i32 min_y= ust::max(y, 0);
+				for( var i32 mut dst_y = prev_y - 1; dst_y >= min_y; --dst_y)
+				{
+					unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = 0xFFFFFFFFu;
+				}
+
+				prev_y = min_y;
+			}
+		}
 
 		if( must_lock_surface )
 		{
