@@ -4,7 +4,7 @@ import "camera_controller.uh"
 namespace NS
 {
 
-fn CameraController::constructor( Vec3f pos )
+fn CameraController::constructor( Vec3f& pos )
 	( pos_= pos )
 {}
 
@@ -38,8 +38,8 @@ fn CameraController::Update( mut this, f32 time_delta_s, ust::array_view_imut</b
 		key_turn_down(SDL_SCANCODE_DOWN);
 
 	var f32 c_pi= 3.1415926535f;
-	var f32 speed= 40.0f;
-	var f32 vertical_speed= speed * 0.8f;
+	var f32 speed= 48.0f;
+	var f32 vertical_speed= speed;
 	var f32 angle_speed= 1.0f;
 	var f32 max_elevation= c_pi * 3.0f / 8.0f;
 

@@ -7,7 +7,7 @@ namespace NS
 class CameraController
 {
 public:
-	fn constructor( Vec3f pos );
+	fn constructor( Vec3f& pos );
 
 	fn GetPos(this) : Vec3f;
 	fn GetAzimuth(this) : f32;

@@ -34,7 +34,7 @@ struct Vec2
 		return ThisType( l.x - r.x, l.y - r.y);
 	}
 
-	// Subtract a vector from this.
+	// Subtract vector from this.
 	op-=( mut this, ThisType& other )
 	{
 		this.x -= other.x;
@@ -148,7 +148,7 @@ struct Vec3
 		return ThisType( l.x - r.x, l.y - r.y, l.z - r.z );
 	}
 
-	// Subtract a vector from this.
+	// Subtract vector from this.
 	op-=( mut this, ThisType& other )
 	{
 		this.x -= other.x;

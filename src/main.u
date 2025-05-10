@@ -8,7 +8,7 @@ import "camera_controller.uh"
 
 pretty_main
 {
-	// Place actual main inside out "NS" namespace.
+	// Place actual main inside our "NS" namespace.
 	return NS::Main();
 }
 
@@ -214,7 +214,7 @@ fn Main() : i32
 
 		var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
 
-		var Vec3f cam_position= camera_controller.GetPos();
+		var Vec3f cam_pos= camera_controller.GetPos();
 		var f32 additional_y_shift = -ust::tan( camera_controller.GetElevation() );
 
 		var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
@@ -226,7 +226,7 @@ fn Main() : i32
 		// Process columns.
 		for( var u32 mut x= 0u; x < u32( surface.w ); ++x )
 		{
-			var f32 ray_x = (f32(x) - f32(surface.w) * 0.5f) / screen_scale;
+			var f32 ray_offset = (f32(surface.w) * 0.5f - f32(x)) / screen_scale;
 
 			var $(Color32) dst_column = unsafe( dst_colors + x );
 
@@ -234,11 +234,11 @@ fn Main() : i32
 
 			for( var f32 mut depth= 2.0f; depth < max_depth; depth *= 1.004f )
 			{
-				var Vec2f ray_vec( depth, -ray_x * depth );
+				var Vec2f ray_vec( depth, ray_offset * depth );
 				var Vec2f ray_vec_rotated(
 					ray_vec.x * ray_rotate_cos - ray_vec.y * ray_rotate_sin,
 					ray_vec.y * ray_rotate_cos + ray_vec.x * ray_rotate_sin );
-				var Vec2f terrain_pos= ray_vec_rotated + Vec2f( cam_position.x, cam_position.y );
+				var Vec2f terrain_pos= ray_vec_rotated + Vec2f( cam_pos.x, cam_pos.y );
 
 				// Use conversion to int rather than proper floor.
 				// It isn't correct for negative numbers, but fine, since we shift camera coordinates to positive values.
@@ -248,7 +248,7 @@ fn Main() : i32
 
 				var TerrainElement& el = hightmap_data[size_type(address)];
 
-				var f32 screen_y = (el.height - cam_position.z) / depth;
+				var f32 screen_y = (el.height - cam_pos.z) / depth;
 				var i32 y(((1.0f - additional_y_shift) - screen_y) * screen_scale);
 
 				if(y >= prev_y)
