@@ -1,0 +1,10 @@
+namespace NS
+{
+
+class CameraController
+{
+public:
+private:
+}
+
+} // namespace NS
