@@ -1,15 +1,16 @@
 import "/main_wrapper.u"
 import "/math.u"
 import "/stdout.u"
+import "/vector.u"
 import "/Nordsee/SDL.uh"
 
 pretty_main
 {
-	var u32 hightmap_size_log2= 8u;
+	var u32 hightmap_size_log2= 9u;
 	var u32 hightmap_size= 1u << hightmap_size_log2;
 	var u32 hightmap_size_mask= hightmap_size - 1u;
 
-	var [ f32, hightmap_size * hightmap_size ] mut hightmap_data= zero_init;
+	var ust::vector</f32/> mut hightmap_data( size_type( hightmap_size * hightmap_size ), 0.0f );
 
 	for( auto mut y= 0u; y < hightmap_size; ++y )
 	{
@@ -28,7 +29,7 @@ pretty_main
 			var f32 h = ust::max(77.0f, f32(r) / 512.0f);
 
 			var u32 address = x + (y << hightmap_size_log2);
-			hightmap_data[address] = h;
+			hightmap_data[size_type(address)] = h * 1.5f;
 		}
 	}
 
@@ -122,15 +123,14 @@ pretty_main
 
 		var f32 move_speed = 40.0f;
 
-		var f32 max_depth = f32(hightmap_size) * 0.7f;
+		var f32 max_depth = f32(hightmap_size) * 1.5f;
 
 		// Use initial coordinates far from zero in order to avoid incorrect hightmap coordinates rounding for negative coordinates.
 		var f32 cam_initial_shift = 8.0f * f32(hightmap_size);
-		var [ f32, 3 ] cam_position[ cam_initial_shift, cam_initial_shift + time * move_speed, 340.0f ];
+		var [ f32, 3 ] cam_position[ cam_initial_shift, cam_initial_shift + time * move_speed, 240.0f ];
 		var f32 additional_y_shift = 0.7f;
 
 		var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
-
 
 		var f32 cam_angle = time * (-0.06f);
 		var f32 cam_angle_cos = ust::cos(cam_angle);
@@ -145,7 +145,7 @@ pretty_main
 
 			var i32 mut prev_y = surface.h;
 
-			for( var f32 mut depth = 90.0f; depth < max_depth; depth *= 1.0035f)
+			for( var f32 mut depth = 30.0f; depth < max_depth; depth *= 1.005f)
 			{
 				var [ f32, 2 ] ray_vec[ ray_x * depth, depth ];
 				var [ f32, 2 ] ray_vec_rotated[ ray_vec[0] * cam_angle_cos - ray_vec[1] * cam_angle_sin, ray_vec[0] * cam_angle_sin + ray_vec[1] * cam_angle_cos ];
@@ -157,10 +157,10 @@ pretty_main
 					u32(i32(terrain_pos[0]) & i32(hightmap_size_mask)) +
 					u32((i32(terrain_pos[1]) & i32(hightmap_size_mask)) << hightmap_size_log2);
 
-				var f32 h = hightmap_data[address];
+				var f32 h = hightmap_data[size_type(address)];
 
-				var i32 screen_y( (h - cam_position[2]) / depth );
-				var i32 y = i32(((1.0f - additional_y_shift) - f32(screen_y)) * screen_scale);
+				var f32 screen_y = (h - cam_position[2]) / depth;
+				var i32 y(((1.0f - additional_y_shift) - screen_y) * screen_scale);
 
 				if(y >= prev_y)
 				{
@@ -168,10 +168,13 @@ pretty_main
 				}
 
 				var i32 min_y= ust::max(y, 0);
+				/*
 				for( var i32 mut dst_y = prev_y - 1; dst_y >= min_y; --dst_y)
 				{
 					unsafe( $>( dst_column + u32(dst_y) * pitch ) ) = 0xFFFFFFFFu;
-				}
+				}*/
+
+				unsafe( $>( dst_column + u32(min_y) * pitch ) ) = 0xFFFFFFFFu;
 
 				prev_y = min_y;
 			}
@@ -202,10 +205,10 @@ fn InterpolatedNoise(u32 x, u32 y, u32 size_log2, u32 k) : u32
 
 	var [ u32, 4 ] noise
 	[
-		u32(Noise2(i32((X     ) & mask), i32((Y     ) & mask), 0)),
-		u32(Noise2(i32((X + 1u) & mask), i32((Y     ) & mask), 0)),
-		u32(Noise2(i32((X + 1u) & mask), i32((Y + 1u) & mask), 0)),
-		u32(Noise2(i32((X     ) & mask), i32((Y + 1u) & mask), 0))
+		(Noise2(i32((X     ) & mask), i32((Y     ) & mask), 0)),
+		(Noise2(i32((X + 1u) & mask), i32((Y     ) & mask), 0)),
+		(Noise2(i32((X + 1u) & mask), i32((Y + 1u) & mask), 0)),
+		(Noise2(i32((X     ) & mask), i32((Y + 1u) & mask), 0))
 	];
 
 	var u32 dx = x - (X << k);
