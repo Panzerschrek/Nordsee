@@ -5,11 +5,11 @@ namespace NS
 
 fn DrawText(
 	DrawableSurface& surface,
+	ust::array_view_imut</char8/> text,
 	i32 start_x, i32 start_y,
-	ust::array_view_imut</char8/> text )
+	Color32 color,
+	u32 scale )
 {
-	var u32 scale= 1u;
-
 	var i32 mut current_x= start_x, mut current_y= start_y;
 
 	foreach( c : text )
@@ -45,7 +45,7 @@ fn DrawText(
 							auto dst_x = current_x + i32(pix_x) + i32( glyph_x * scale );
 							if( dst_x >= 0 && dst_x < i32(surface.w) )
 							{
-								surface.data[ size_type(dst_x) + size_type(dst_y) * size_type( surface.pitch ) ] = 0xFFFFFFFFu;
+								surface.data[ size_type(dst_x) + size_type(dst_y) * size_type( surface.pitch ) ] = color;
 							}
 						}
 					}

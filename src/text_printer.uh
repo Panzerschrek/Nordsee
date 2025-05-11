@@ -5,7 +5,9 @@ namespace NS
 
 fn DrawText(
 	DrawableSurface& surface,
+	ust::array_view_imut</char8/> text,
 	i32 start_x, i32 start_y,
-	ust::array_view_imut</char8/> text );
+	Color32 color,
+	u32 scale );
 
 } // namespace NS
