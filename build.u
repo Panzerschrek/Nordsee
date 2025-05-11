@@ -19,7 +19,8 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 		.source_files= ust::make_array</ ust::string8 />(
 			"src/camera_controller.u",
 			"src/main.u",
-			"src/noise_heightmap.u" ),
+			"src/noise_heightmap.u",
+			"src/waves_heightmap.u" ),
 	};
 
 	if( is_target_windows )

@@ -1,0 +1,37 @@
+import "/math.u"
+import "waves_heightmap.uh"
+
+namespace NS
+{
+
+// TODO - move constants to separate file.
+// TODO - define PI via TAU instead.
+var f32 c_pi= 3.1415926535f;
+var f32 c_tau= c_pi * 2.0f;
+
+fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
+{
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+
+	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_size * heightmap_size ), 0.0f );
+
+	var i32 num_waves= 10;
+	var f32 scale= c_tau * f32(num_waves) / f32(heightmap_size);
+	var f32 amplitude= 10.0f;
+
+	for( auto mut y= 0u; y < heightmap_size; ++y )
+	{
+
+		for( auto mut x= 0u; x < heightmap_size; ++x )
+		{
+			var f32 h= ust::sin( f32(x + y) * scale ) * amplitude;
+
+			var u32 address = x + (y << heightmap_size_log2);
+			heightmap_data[size_type(address)] = h;
+		}
+	}
+
+	return heightmap_data;
+}
+
+} // namespace NS

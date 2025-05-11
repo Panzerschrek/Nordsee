@@ -1,0 +1,8 @@
+import "/vector.u"
+
+namespace NS
+{
+
+fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>;
+
+} // namespace NS
