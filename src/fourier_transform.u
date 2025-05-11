@@ -129,7 +129,15 @@ fn PerformInverseFastFourierTransform( ust::array_view_imut</Complexf/> in ) : u
 	var ust::vector</Complexf/> mut res( in.size(), Complexf::Zero() );
 	for( auto mut i= 0s; i < in.size(); ++i )
 	{
-		auto src_index= in.size() - 1s - i;
+		auto mut src_index= 0s;
+		for( var size_type mut b= 0s; b < size_log2; ++b )
+		{
+			var size_type src_position= size_log2 - 1s - b;
+			var size_type dst_position= b;
+			var size_type bit_value= (i >> src_position) & 1s;
+			src_index |= bit_value << dst_position;
+		}
+
 		res[i]= in[src_index];
 	}
 
@@ -148,7 +156,7 @@ fn PerformInverseFastFourierTransform( ust::array_view_imut</Complexf/> in ) : u
 			{
 				//var Complexf omega= Complexf::ImaginaryExponent( c_tau * f32(j) / f32(m) );
 				auto val0= res[k + j];
-				auto val1= omega * res[k + j + m / 2s];
+				auto val1= res[k + j + m / 2s] * omega;
 
 				res[k + j]= val0 + val1;
 				res[k + j + m / 2s]= val0 - val1;

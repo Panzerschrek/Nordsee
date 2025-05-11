@@ -17,10 +17,10 @@ fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 	scoped_array Complexf mut freqs[ size_type( heightmap_area )]( Complexf::Zero() );
 
 	freqs[ size_type( 2u | ( 3u << heightmap_size_log2 ) ) ]= Complexf( 5.0f * f32(heightmap_area), 0.0f );
-	//freqs[ size_type( 7u | ( 5u << heightmap_size_log2 ) ) ]= Complexf( 2.5f * f32(heightmap_area), 0.0f );
+	freqs[ size_type( 7u | ( 5u << heightmap_size_log2 ) ) ]= Complexf( 2.5f * f32(heightmap_area), 0.0f );
 
 	// Frequencies above heightmap_size / 2 represent waves traveling in opposite direction.
-	//freqs[ size_type( (heightmap_size - 16u ) | ( 16u << heightmap_size_log2 ) ) ]= Complexf( 0.5f * f32(heightmap_area), 0.0f );
+	freqs[ size_type( (heightmap_size - 16u ) | ( 16u << heightmap_size_log2 ) ) ]= Complexf( 0.5f * f32(heightmap_area), 0.0f );
 
 	scoped_array Complexf mut intermediate_buffer[ size_type( heightmap_area ) ]( Complexf::Zero() );
 
