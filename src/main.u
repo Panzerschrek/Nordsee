@@ -22,7 +22,7 @@ fn Main() : i32
 {
 	ust::stdout_print( "Nordsee\n" );
 
-	var u32 heightmap_size_log2= 10u;
+	var u32 heightmap_size_log2= 7u;
 
 	var ust::vector</f32/> heightmap_data= GenerateWavesHeightmap( heightmap_size_log2 );
 	var ust::vector</Color32/> color_data= GenerateHeightmapColors( heightmap_size_log2, heightmap_data );

@@ -1,4 +1,5 @@
 import "/math.u"
+import "/scoped_array.u"
 import "waves_heightmap.uh"
 
 namespace NS
@@ -15,17 +16,23 @@ fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 
 	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_size * heightmap_size ), 0.0f );
 
-	var i32 num_waves= 10;
-	var f32 scale= c_tau * f32(num_waves) / f32(heightmap_size);
-	var f32 amplitude= 10.0f;
+	scoped_array f32 mut freqs[ size_type( heightmap_size )]( 0.0f );
+	freqs[2s]= 10.0f;
+	freqs[3s]= 6.0f;
+	freqs[8s]= 1.0f;
 
 	for( auto mut y= 0u; y < heightmap_size; ++y )
 	{
+		// Perform inverse discrete Fourier transform here.
+		var f32 mut h= 0.0f;
+		var f32 scale= f32(y) * ( c_tau / f32(heightmap_size) );
+		for( auto mut i= 0u; i < heightmap_size; ++i )
+		{
+			h+= freqs[size_type(i)] * ust::cos( f32(i) * scale );
+		}
 
 		for( auto mut x= 0u; x < heightmap_size; ++x )
 		{
-			var f32 h= ust::sin( f32(x + y) * scale ) * amplitude;
-
 			var u32 address = x + (y << heightmap_size_log2);
 			heightmap_data[size_type(address)] = h;
 		}
