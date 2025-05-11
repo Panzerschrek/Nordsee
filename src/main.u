@@ -6,6 +6,7 @@ import "/Nordsee/SDL.uh"
 import "camera_controller.uh"
 import "color.uh"
 import "noise_heightmap.uh"
+import "waves_heightmap.uh"
 
 
 pretty_main
@@ -21,10 +22,10 @@ fn Main() : i32
 {
 	ust::stdout_print( "Nordsee\n" );
 
-	var u32 heightmap_size_log2= 10u;
+	var u32 heightmap_size_log2= 7u;
 
-	var ust::vector</f32/> heightmap_data= GenerateNoiseHeightmap( heightmap_size_log2 );
-	var ust::vector</Color32/> color_data= GenerateHeightmapColors( heightmap_size_log2, heightmap_data );
+	var ust::vector</f32/> heightmap_data= GenerateWavesHeightmap( heightmap_size_log2 );
+	var ust::vector</Color32/> color_data= GenerateWavesColors( heightmap_size_log2, heightmap_data );
 
 	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
 
@@ -166,7 +167,7 @@ fn DrawHeightmap(
 	var u32 heightmap_size = 1u << heightmap_size_log2;
 	var u32 heightmap_size_mask= heightmap_size - 1u;
 
-	var f32 max_depth = f32(heightmap_size) * 1.5f;
+	var f32 max_depth = f32(heightmap_size) * 2.0f;
 
 	var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
 

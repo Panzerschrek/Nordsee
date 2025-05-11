@@ -1,0 +1,139 @@
+import "/math.u"
+
+namespace NS
+{
+
+type Complexf= Complex</f32/>;
+
+template</type T/>
+struct Complex
+{
+	type ThisType= Complex</T/>;
+
+	// Calculate exp( i * power )
+	fn ImaginaryExponent( T power ) : ThisType
+	{
+		return ThisType( ust::cos( power ), ust::sin( power ) );
+	}
+
+	fn Zero() : ThisType
+	{
+		return ThisType( T(0.0), T(0.0) );
+	}
+
+	fn constructor( T in_re, T in_im )
+		( re= in_re, im= in_im )
+	{}
+
+	// Add two complex numbers.
+	op+( ThisType& l, ThisType& r ) : ThisType
+	{
+		return ThisType( l.re + r.re, l.im + r.im );
+	}
+
+	// Add complex number to this.
+	op+=( mut this, ThisType& other )
+	{
+		this.re+= other.re;
+		this.im+= other.im;
+	}
+
+	// Subtract two complex numbers.
+	op-( ThisType& l, ThisType& r ) : ThisType
+	{
+		return ThisType( l.re - r.re, l.im - r.im );
+	}
+
+	// Subtract complex number from this.
+	op-=( mut this, ThisType& other )
+	{
+		this.re-= other.re;
+		this.im-= other.im;
+	}
+
+	// Get inverted complex number.
+	op-( this ) : ThisType
+	{
+		return ThisType( -re, -im );
+	}
+
+	// Multiply two complex numbers.
+	op*( ThisType& l, ThisType& r ) : ThisType
+	{
+		return ThisType( l.re * r.re - l.im * r.im, l.re * r.im + r.re * l.im );
+	}
+
+	// Multiply this complex number by another.
+	op*=( mut this, ThisType& other )
+	{
+		var T new_re= this.re * other.re - this.im * other.im;
+		var T new_im= this.re * other.im + other.re * this.im;
+		re= new_re;
+		im= new_im;
+	}
+
+	// Multiply complex number by scalar.
+	op*( ThisType& c, T scalar ) : ThisType
+	{
+		return ThisType( c.re * scalar, c.im * scalar );
+	}
+
+	// Multiply complex number by scalar.
+	op*( T scalar, ThisType& c ) : ThisType
+	{
+		return ThisType( c.re * scalar, c.im * scalar );
+	}
+
+	// Multiply this complex number by scalar.
+	op*=( mut this, T scalar )
+	{
+		re*= scalar;
+		im*= scalar;
+	}
+
+	// Divide complex number by scalar.
+	op/( ThisType& c, T scalar ) : ThisType
+	{
+		return ThisType( c.re / scalar, c.im / scalar );
+	}
+
+	// Divide this complex number by scalar.
+	op/=( mut this, T scalar )
+	{
+		re/= scalar;
+		im/= scalar;
+	}
+
+	// Complex numbers division.
+	op/( ThisType& l, ThisType& r ) : ThisType
+	{
+		var T denominator= r.re * r.re + r.im * r.im;
+		return ThisType(
+			( l.re * r.re + l.im * r.im ) / denominator,
+			( l.im * r.re - l.re * r.im ) / denominator );
+	}
+
+	// Divide this complex number by another.
+	op/=( mut this, ThisType& other )
+	{
+		var ThisType res= this / other;
+		this= res;
+	}
+
+	fn Magnitude( this ) : T
+	{
+		return ust::sqrt( re * re + im * im );
+	}
+
+	fn SquareMagnitude( this ) : T
+	{
+		return re * re + im * im;
+	}
+
+	// Real part.
+	T re;
+	// Imaginary part.
+	T im;
+}
+
+} // namespace NS

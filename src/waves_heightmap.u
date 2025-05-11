@@ -1,0 +1,113 @@
+import "/math.u"
+import "/scoped_array.u"
+import "complex.uh"
+import "waves_heightmap.uh"
+
+namespace NS
+{
+
+// TODO - move constants to separate file.
+// TODO - define PI via TAU instead.
+var f32 c_pi= 3.1415926535f;
+var f32 c_tau= c_pi * 2.0f;
+
+fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
+{
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+
+	var u32 heightmap_area= heightmap_size * heightmap_size;
+
+	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_area ), 0.0f );
+
+	scoped_array Complexf mut freqs[ size_type( heightmap_area )]( Complexf::Zero() );
+
+	freqs[ size_type( 2u | ( 3u << heightmap_size_log2 ) ) ]= Complexf( 5.0f * f32(heightmap_area), 0.0f );
+	freqs[ size_type( 7u | ( 5u << heightmap_size_log2 ) ) ]= Complexf( 2.5f * f32(heightmap_area), 0.0f );
+
+	// Frequencies above heightmap_size / 2 represent waves traveling in opposite direction.
+	freqs[ size_type( (heightmap_size - 16u ) | ( 16u << heightmap_size_log2 ) ) ]= Complexf( 0.5f * f32(heightmap_area), 0.0f );
+
+	scoped_array Complexf mut rows_transformed[ size_type( heightmap_area ) ]( Complexf::Zero() );
+
+	// Perform per-row inverse discrete Fourier transform.
+	for( auto mut y= 0u; y < heightmap_size; ++y )
+	{
+		for( auto mut x= 0u; x < heightmap_size; ++ x )
+		{
+			var Complexf mut h= Complexf::Zero();
+			var f32 scale= f32(x) * ( c_tau / f32(heightmap_size) );
+			for( auto mut k= 0u; k < heightmap_size; ++k )
+			{
+				h+=
+					freqs[ size_type( k | ( y << heightmap_size_log2 ) ) ] *
+					Complexf::ImaginaryExponent( f32(k) * scale );
+			}
+			h/= f32(heightmap_size);
+
+			rows_transformed[ size_type( x | ( y << heightmap_size_log2 ) ) ]= h;
+		}
+	}
+
+	// Perform per-column inverse discrete Fourier transform.
+	for( auto mut x= 0u; x < heightmap_size; ++x )
+	{
+		for( auto mut y= 0u; y < heightmap_size; ++y )
+		{
+			var Complexf mut h= Complexf::Zero();
+			var f32 scale= f32(y) * ( c_tau / f32(heightmap_size) );
+			for( auto mut k= 0u; k < heightmap_size; ++k )
+			{
+				h+=
+					rows_transformed[ size_type( x | ( k << heightmap_size_log2 ) ) ] *
+					Complexf::ImaginaryExponent( f32(k) * scale );
+			}
+			h/= f32(heightmap_size);
+
+			heightmap_data[ size_type( x | (y << heightmap_size_log2) ) ] = h.re;
+		}
+	}
+
+	return heightmap_data;
+}
+
+fn GenerateWavesColors(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> heightmap_data ) : ust::vector</Color32/>
+{
+	var f32 mut min_height= heightmap_data.front(), mut max_height= min_height;
+
+	foreach( h : heightmap_data )
+	{
+		ust::min_assign( min_height, h );
+		ust::max_assign( max_height, h );
+	}
+
+	var f32 height_range= max_height - min_height;
+
+	auto mut res= ust::make_vector_from_mapped_range(
+		heightmap_data,
+		lambda[&]( f32 h ) : Color32
+		{
+			var f32 intensity= ust::max( 0.0f, ust::min( (h - min_height) / height_range, 1.0f ) );
+			var u32 intensity_i( intensity * 255.0f );
+			return intensity_i | (intensity_i << 8u) | (intensity_i << 16u);
+		});
+
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+
+	var Color32 pink= 0x00FF00FFu;
+
+	for( var u32 mut x= 0u; x < heightmap_size; ++x )
+	{
+		res[ size_type(x) ]= pink;
+	}
+
+	for( var u32 mut y= 0u; y < heightmap_size; ++y )
+	{
+		res[ size_type( y << heightmap_size_log2 ) ]= pink;
+	}
+
+	return res;
+}
+
+} // namespace NS

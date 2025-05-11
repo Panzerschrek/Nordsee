@@ -1,0 +1,13 @@
+import "/vector.u"
+import "color.uh"
+
+namespace NS
+{
+
+fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>;
+
+fn GenerateWavesColors(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> heightmap_data ) : ust::vector</Color32/>;
+
+} // namespace NS
