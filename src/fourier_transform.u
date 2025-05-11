@@ -83,23 +83,25 @@ fn Perform2DInverseFastFourierTransform(
 			intermediate_buffer.subrange( start_index, end_index ) );
 	}
 
+	scoped_array Complexf mut temp_line[ size_type(size) ]( Complexf::Zero() );
+	scoped_array Complexf mut temp_line2[ size_type(size) ]( Complexf::Zero() );
+
+	var f32 scale= 1.0f / f32(area);
+
 	// Perform per-column inverse discrete Fourier transform.
+	// TODO - optimize this - avoid using second intermediate buffer.
 	for( auto mut x= 0u; x < size; ++x )
 	{
-		// TODO - perform fast approach too.
 		for( auto mut y= 0u; y < size; ++y )
 		{
-			var Complexf mut h= Complexf::Zero();
-			var f32 scale= f32(y) * ( c_tau / f32(size) );
-			for( auto mut k= 0u; k < size; ++k )
-			{
-				h+=
-					intermediate_buffer[ size_type( x | ( k << size_log2 ) ) ] *
-					Complexf::ImaginaryExponent( f32(k) * scale );
-			}
-			h/= f32(area);
+			temp_line[ size_type(y) ]= intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ];
+		}
 
-			out[ size_type( x | (y << size_log2) ) ] = h.re;
+		PerformInverseFastFourierTransform( temp_line, temp_line2 );
+
+		for( auto mut y= 0u; y < size; ++y )
+		{
+			out[ size_type( x | (y << size_log2) ) ] = temp_line2[ size_type(y) ].re * scale;
 		}
 	}
 }
