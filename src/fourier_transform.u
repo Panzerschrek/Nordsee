@@ -76,15 +76,11 @@ fn Perform2DInverseFastFourierTransform(
 	// Perform per-row inverse discrete Fourier transform.
 	for( auto mut y= 0u; y < size; ++y )
 	{
-		auto start_index= y << size_log2;
-		auto end_index= start_index + size;
-		auto row_res= PerformInverseFastFourierTransform(
-			freqs.subrange( size_type( start_index ), size_type(end_index) ) );
-
-		for( auto mut x= 0u; x < size; ++ x )
-		{
-			intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ]= row_res[ size_type(x) ] / f32( size );
-		}
+		var size_type start_index( y << size_log2 );
+		var size_type end_index= start_index + size_type(size);
+		PerformInverseFastFourierTransform(
+			freqs.subrange( start_index, end_index ),
+			intermediate_buffer.subrange( start_index, end_index ) );
 	}
 
 	// Perform per-column inverse discrete Fourier transform.
@@ -101,124 +97,63 @@ fn Perform2DInverseFastFourierTransform(
 					intermediate_buffer[ size_type( x | ( k << size_log2 ) ) ] *
 					Complexf::ImaginaryExponent( f32(k) * scale );
 			}
-			h/= f32(size);
+			h/= f32(area);
 
 			out[ size_type( x | (y << size_log2) ) ] = h.re;
 		}
 	}
 }
 
-// TODO - optimize it, avoid allocating on each iteration, remove recursion.
-fn PerformInverseFastFourierTransform( ust::array_view_imut</Complexf/> in ) : ust::vector</Complexf/>
+fn PerformInverseFastFourierTransform(
+	ust::array_view_imut</Complexf/> in,
+	ust::array_view_mut</Complexf/> out )
 {
 	assert( in.size() > 0s );
 	assert( ( ( in.size() & (in.size() - 1s) ) == 0s ) );
-
-	if( in.size() == 1s )
-	{
-		return ust::make_array( in.front() );
-	}
+	assert( in.size() == out.size() );
 
 	var size_type mut size_log2= 0s;
 	while( ( 1s << size_log2 ) < in.size() )
 	{
 		++size_log2;
 	}
-	//ust::stdout_print( ust::concat( "Size log2 is ", ust::to_string8(size_log2), "\n" ) );
 
-	var ust::vector</Complexf/> mut res( in.size(), Complexf::Zero() );
 	for( auto mut i= 0s; i < in.size(); ++i )
 	{
+		// Change bits order in the index.
 		auto mut src_index= 0s;
 		for( var size_type mut b= 0s; b < size_log2; ++b )
 		{
-			var size_type src_position= size_log2 - 1s - b;
-			var size_type dst_position= b;
-			var size_type bit_value= (i >> src_position) & 1s;
-			src_index |= bit_value << dst_position;
+			var size_type bit_value= (i >> (size_log2 - 1s - b)) & 1s;
+			src_index |= bit_value << b;
 		}
 
-		res[i]= in[src_index];
+		out[i]= in[src_index];
 	}
-
-	// ZALUPA!!!
 
 	for( var size_type mut s= 1s; s <= size_log2; ++s )
 	{
 		var size_type m= 1s << s;
+		var size_type half_m= m >> 1s;
 
-		var Complexf omega_m= Complexf::ImaginaryExponent( c_tau / f32(m) );
+		var f32 scale= c_tau / f32(m);
 
-		for( var size_type mut k= 0s; k < in.size(); k+= m )
+		for( var size_type mut j= 0s; j < half_m; ++j )
 		{
-			var Complexf mut omega= Complexf( 1.0f, 0.0f );
-			for( var size_type mut j= 0s; j < m / 2s; ++j )
+			var Complexf omega= Complexf::ImaginaryExponent( f32(j) * scale );
+			for( var size_type mut k= 0s; k < in.size(); k+= m )
 			{
-				//var Complexf omega= Complexf::ImaginaryExponent( c_tau * f32(j) / f32(m) );
-				auto val0= res[k + j];
-				auto val1= res[k + j + m / 2s] * omega;
+				var size_type index0= j + k;
+				var size_type index1= j + k + half_m;
 
-				res[k + j]= val0 + val1;
-				res[k + j + m / 2s]= val0 - val1;
-				omega *= omega_m;
+				auto val0= out[index0];
+				auto val1= out[index1] * omega;
+
+				out[index0]= val0 + val1;
+				out[index1]= val0 - val1;
 			}
 		}
 	}
-
-	/*
-	for( var size_type mut step= 0s; step < size_log2; ++step )
-	{
-		var size_type target_digit= size_log2 - 1s - step;
-		var size_type target_digit_mask= 1s << target_digit;
-		var size_type lo_mask= target_digit_mask - 1s;
-		var size_type hi_mask= size_type(0xFFFFFFFFu) & ~lo_mask;
-
-		for( var size_type mut pair_index= 0s; pair_index < half_size; ++pair_index )
-		{
-			var size_type index0= (pair_index & lo_mask) | ((pair_index & hi_mask) << 1s);
-			var size_type index1= index0 | target_digit_mask;
-
-			var Complexf e= Complexf::ImaginaryExponent( c_tau * f32(pair_index) / f32( in.size() >> target_digit ) );
-
-			auto val0= res[index0];
-			auto val1= res[index1];
-
-			auto new_val0= val0 + val1 * e;
-			auto new_val1= val0 - val1 * e;
-			res[index0]= new_val0;
-			res[index1]= new_val1;
-		}
-	}*/
-
-	/*
-
-	var size_type half_size= in.size() >> 1s;
-
-	scoped_array Complexf mut even_values[ half_size ]( Complexf::Zero() );
-	scoped_array Complexf mut odd_values[ half_size ]( Complexf::Zero() );
-
-	for( auto mut i= 0s; i < half_size; ++i )
-	{
-		even_values[i]= in[ i * 2s + 0s ];
-		odd_values [i]= in[ i * 2s + 1s ];
-	}
-
-	auto even_result= PerformInverseFastFourierTransform( even_values );
-	auto odd_result= PerformInverseFastFourierTransform( odd_values );
-
-	var ust::vector</Complexf/> mut res( in.size(), Complexf::Zero() );
-
-	for( auto mut k= 0s; k < half_size; ++k )
-	{
-		// TODO - check if it's correct.
-		var Complexf e= Complexf::ImaginaryExponent( c_tau * f32(k) / f32(in.size() ) );
-		res[k]= even_result[k] + odd_result[k] * e;
-		res[k + half_size]= even_result[k] - odd_result[k] * e;
-	}
-
-	*/
-
-	return res;
 }
 
 } // namespace NS
