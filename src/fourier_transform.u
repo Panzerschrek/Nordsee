@@ -1,6 +1,7 @@
 import "/assert.u"
 import "/scoped_array.u"
 import "/vector.u"
+import "/string_conversions.u"
 import "fourier_transform.uh"
 import "math_constants.uh"
 
@@ -118,6 +119,71 @@ fn PerformInverseFastFourierTransform( ust::array_view_imut</Complexf/> in ) : u
 		return ust::make_array( in.front() );
 	}
 
+	var size_type mut size_log2= 0s;
+	while( ( 1s << size_log2 ) < in.size() )
+	{
+		++size_log2;
+	}
+	//ust::stdout_print( ust::concat( "Size log2 is ", ust::to_string8(size_log2), "\n" ) );
+
+	var ust::vector</Complexf/> mut res( in.size(), Complexf::Zero() );
+	for( auto mut i= 0s; i < in.size(); ++i )
+	{
+		auto src_index= in.size() - 1s - i;
+		res[i]= in[src_index];
+	}
+
+	// ZALUPA!!!
+
+	for( var size_type mut s= 1s; s <= size_log2; ++s )
+	{
+		var size_type m= 1s << s;
+
+		var Complexf omega_m= Complexf::ImaginaryExponent( c_tau / f32(m) );
+
+		for( var size_type mut k= 0s; k < in.size(); k+= m )
+		{
+			var Complexf mut omega= Complexf( 1.0f, 0.0f );
+			for( var size_type mut j= 0s; j < m / 2s; ++j )
+			{
+				//var Complexf omega= Complexf::ImaginaryExponent( c_tau * f32(j) / f32(m) );
+				auto val0= res[k + j];
+				auto val1= omega * res[k + j + m / 2s];
+
+				res[k + j]= val0 + val1;
+				res[k + j + m / 2s]= val0 - val1;
+				omega *= omega_m;
+			}
+		}
+	}
+
+	/*
+	for( var size_type mut step= 0s; step < size_log2; ++step )
+	{
+		var size_type target_digit= size_log2 - 1s - step;
+		var size_type target_digit_mask= 1s << target_digit;
+		var size_type lo_mask= target_digit_mask - 1s;
+		var size_type hi_mask= size_type(0xFFFFFFFFu) & ~lo_mask;
+
+		for( var size_type mut pair_index= 0s; pair_index < half_size; ++pair_index )
+		{
+			var size_type index0= (pair_index & lo_mask) | ((pair_index & hi_mask) << 1s);
+			var size_type index1= index0 | target_digit_mask;
+
+			var Complexf e= Complexf::ImaginaryExponent( c_tau * f32(pair_index) / f32( in.size() >> target_digit ) );
+
+			auto val0= res[index0];
+			auto val1= res[index1];
+
+			auto new_val0= val0 + val1 * e;
+			auto new_val1= val0 - val1 * e;
+			res[index0]= new_val0;
+			res[index1]= new_val1;
+		}
+	}*/
+
+	/*
+
 	var size_type half_size= in.size() >> 1s;
 
 	scoped_array Complexf mut even_values[ half_size ]( Complexf::Zero() );
@@ -141,6 +207,8 @@ fn PerformInverseFastFourierTransform( ust::array_view_imut</Complexf/> in ) : u
 		res[k]= even_result[k] + odd_result[k] * e;
 		res[k + half_size]= even_result[k] - odd_result[k] * e;
 	}
+
+	*/
 
 	return res;
 }
