@@ -1,0 +1,11 @@
+import "drawable_surface.uh"
+
+namespace NS
+{
+
+fn DrawText(
+	DrawableSurface& surface,
+	i32 start_x, i32 start_y,
+	ust::array_view_imut</char8/> text );
+
+} // namespace NS

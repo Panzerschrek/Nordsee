@@ -6,6 +6,7 @@ import "/Nordsee/SDL.uh"
 import "camera_controller.uh"
 import "drawable_surface.uh"
 import "noise_heightmap.uh"
+import "text_printer.uh"
 import "waves_heightmap.uh"
 
 

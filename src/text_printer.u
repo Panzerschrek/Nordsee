@@ -1,0 +1,21 @@
+import "text_printer.uh"
+
+namespace NS
+{
+
+auto& font_bitmap_data= embed</byte8/>( "fixedsys8x18.bmp" );
+
+fn DrawText(
+	DrawableSurface& surface,
+	i32 start_x, i32 start_y,
+	ust::array_view_imut</char8/> text )
+{
+	// TODO
+	ust::ignore_unused(surface);
+	ust::ignore_unused(start_x);
+	ust::ignore_unused(start_y);
+	ust::ignore_unused(text);
+	ust::ignore_unused(font_bitmap_data);
+}
+
+} // namespace NS
