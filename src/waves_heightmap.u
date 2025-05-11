@@ -1,5 +1,6 @@
 import "/math.u"
 import "/scoped_array.u"
+import "complex.uh"
 import "waves_heightmap.uh"
 
 namespace NS
