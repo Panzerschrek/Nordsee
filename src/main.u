@@ -120,20 +120,24 @@ fn Main() : i32
 
 		var u32 pitch= u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
 
+		var DrawableSurface drawable_surface
+		{
+			.w( surface.w ),
+			.h( surface.h ),
+			.pitch= pitch,
+			.data= unsafe( ust::array_view_mut</Color32/>(
+				ust::byte_ptr_cast</Color32/>( surface.pixels ),
+				size_type( pitch * u32(surface.h) ) ) ),
+		};
+
 		DrawHeightmap(
 			heightmap_size_log2,
 			heightmap_data,
 			color_data,
 			camera_controller,
-			DrawableSurface
-			{
-				.w( surface.w ),
-				.h( surface.h ),
-				.pitch= pitch,
-				.data= unsafe( ust::array_view_mut</Color32/>(
-					ust::byte_ptr_cast</Color32/>( surface.pixels ),
-					size_type( pitch * u32(surface.h) ) ) ),
-			});
+			drawable_surface );
+
+		DrawText( drawable_surface, 10, 30, "some" );
 
 		if( must_lock_surface )
 		{
