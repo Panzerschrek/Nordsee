@@ -1,4 +1,6 @@
 import "/assert.u"
+import "/scoped_array.u"
+import "/vector.u"
 import "fourier_transform.uh"
 import "math_constants.uh"
 
@@ -55,6 +57,92 @@ fn Perform2DInverseFourierTransform(
 			out[ size_type( x | (y << size_log2) ) ] = h.re;
 		}
 	}
+}
+
+fn Perform2DInverseFastFourierTransform(
+	u32 size_log2,
+	ust::array_view_imut</Complexf/> freqs,
+	ust::array_view_mut</Complexf/> intermediate_buffer,
+	ust::array_view_mut</f32/> out )
+{
+	var u32 size= 1u << size_log2;
+	var u32 area= size * size;
+
+	assert( freqs.size() == size_type(area) );
+	assert( intermediate_buffer.size() == size_type(area) );
+	assert( out.size() == size_type(area) );
+
+	// Perform per-row inverse discrete Fourier transform.
+	for( auto mut y= 0u; y < size; ++y )
+	{
+		auto start_index= y << size_log2;
+		auto end_index= start_index + size;
+		auto row_res= PerformInverseFastFourierTransform(
+			freqs.subrange( size_type( start_index ), size_type(end_index) ) );
+
+		for( auto mut x= 0u; x < size; ++ x )
+		{
+			intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ]= row_res[ size_type(x) ] / f32( size );
+		}
+	}
+
+	// Perform per-column inverse discrete Fourier transform.
+	for( auto mut x= 0u; x < size; ++x )
+	{
+		// TODO - perform fast approach too.
+		for( auto mut y= 0u; y < size; ++y )
+		{
+			var Complexf mut h= Complexf::Zero();
+			var f32 scale= f32(y) * ( c_tau / f32(size) );
+			for( auto mut k= 0u; k < size; ++k )
+			{
+				h+=
+					intermediate_buffer[ size_type( x | ( k << size_log2 ) ) ] *
+					Complexf::ImaginaryExponent( f32(k) * scale );
+			}
+			h/= f32(size);
+
+			out[ size_type( x | (y << size_log2) ) ] = h.re;
+		}
+	}
+}
+
+// TODO - optimize it, avoid allocating on each iteration, remove recursion.
+fn PerformInverseFastFourierTransform( ust::array_view_imut</Complexf/> in ) : ust::vector</Complexf/>
+{
+	assert( in.size() > 0s );
+	assert( ( ( in.size() & (in.size() - 1s) ) == 0s ) );
+
+	if( in.size() == 1s )
+	{
+		return ust::make_array( in.front() );
+	}
+
+	var size_type half_size= in.size() >> 1s;
+
+	scoped_array Complexf mut even_values[ half_size ]( Complexf::Zero() );
+	scoped_array Complexf mut odd_values[ half_size ]( Complexf::Zero() );
+
+	for( auto mut i= 0s; i < half_size; ++i )
+	{
+		even_values[i]= in[ i * 2s + 0s ];
+		odd_values [i]= in[ i * 2s + 1s ];
+	}
+
+	auto even_result= PerformInverseFastFourierTransform( even_values );
+	auto odd_result= PerformInverseFastFourierTransform( odd_values );
+
+	var ust::vector</Complexf/> mut res( in.size(), Complexf::Zero() );
+
+	for( auto mut k= 0s; k < half_size; ++k )
+	{
+		// TODO - check if it's correct.
+		var Complexf e= Complexf::ImaginaryExponent( c_tau * f32(k) / f32(in.size() ) );
+		res[k]= even_result[k] + odd_result[k] * e;
+		res[k + half_size]= even_result[k] - odd_result[k] * e;
+	}
+
+	return res;
 }
 
 } // namespace NS

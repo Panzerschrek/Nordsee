@@ -14,4 +14,10 @@ fn Perform2DInverseFourierTransform(
 	ust::array_view_mut</Complexf/> intermediate_buffer,
 	ust::array_view_mut</f32/> out );
 
+fn Perform2DInverseFastFourierTransform(
+	u32 size_log2,
+	ust::array_view_imut</Complexf/> freqs,
+	ust::array_view_mut</Complexf/> intermediate_buffer,
+	ust::array_view_mut</f32/> out );
+
 } // namespace NS

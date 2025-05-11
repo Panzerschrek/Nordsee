@@ -26,7 +26,7 @@ fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 
 	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_area ), 0.0f );
 
-	Perform2DInverseFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, heightmap_data );
+	Perform2DInverseFastFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, heightmap_data );
 
 	return heightmap_data;
 }
