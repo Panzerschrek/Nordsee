@@ -1,0 +1,15 @@
+import "/random_access_range.u"
+import "color.uh"
+
+namespace NS
+{
+
+struct DrawableSurface
+{
+	u32 w;
+	u32 h;
+	u32 pitch;
+	ust::array_view_mut</Color32/> data;
+}
+
+} // namespace NS

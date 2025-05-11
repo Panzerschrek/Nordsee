@@ -4,7 +4,7 @@ import "/stdout.u"
 import "/vector.u"
 import "/Nordsee/SDL.uh"
 import "camera_controller.uh"
-import "color.uh"
+import "drawable_surface.uh"
 import "noise_heightmap.uh"
 import "waves_heightmap.uh"
 
@@ -147,14 +147,6 @@ fn Main() : i32
 	unsafe( SDL_Quit() );
 
 	return 0;
-}
-
-struct DrawableSurface
-{
-	u32 w;
-	u32 h;
-	u32 pitch;
-	ust::array_view_mut</Color32/> data;
 }
 
 fn DrawHeightmap(
