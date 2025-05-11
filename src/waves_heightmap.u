@@ -17,26 +17,27 @@ fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 
 	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_size * heightmap_size ), 0.0f );
 
-	scoped_array f32 mut freqs[ size_type( heightmap_size )]( 0.0f );
-	freqs[2s]= 10.0f * f32(heightmap_size);
-	freqs[3s]= 6.0f * f32(heightmap_size);
-	freqs[8s]= 1.0f * f32(heightmap_size);
+	scoped_array Complexf mut freqs[ size_type( heightmap_size )]( Complexf( 0.0f, 0.0f ) );
+	freqs[2s]= Complexf( 10.0f * f32(heightmap_size), 0.0f );
+	freqs[3s]= Complexf( 6.0f * f32(heightmap_size), 0.0f );
+	freqs[8s]= Complexf( 1.0f * f32(heightmap_size), 0.0f );
 
 	for( auto mut y= 0u; y < heightmap_size; ++y )
 	{
 		// Perform inverse discrete Fourier transform here.
-		var f32 mut h= 0.0f;
+		var Complexf mut h( 0.0f, 0.0f );
 		var f32 scale= f32(y) * ( c_tau / f32(heightmap_size) );
 		for( auto mut i= 0u; i < heightmap_size; ++i )
 		{
-			h+= freqs[size_type(i)] * ust::cos( f32(i) * scale );
+			var Complexf c( ust::cos( f32(i) * scale ), ust::sin( f32(i) * scale ) );
+			h+= freqs[size_type(i)].re * c;
 		}
 		h/= f32(heightmap_size);
 
 		for( auto mut x= 0u; x < heightmap_size; ++x )
 		{
 			var u32 address = x + (y << heightmap_size_log2);
-			heightmap_data[size_type(address)] = h;
+			heightmap_data[size_type(address)] = h.re;
 		}
 	}
 
