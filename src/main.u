@@ -25,7 +25,7 @@ fn Main() : i32
 	var u32 heightmap_size_log2= 7u;
 
 	var ust::vector</f32/> heightmap_data= GenerateWavesHeightmap( heightmap_size_log2 );
-	var ust::vector</Color32/> color_data= GenerateHeightmapColors( heightmap_size_log2, heightmap_data );
+	var ust::vector</Color32/> color_data= GenerateWavesColors( heightmap_data );
 
 	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
 
