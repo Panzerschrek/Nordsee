@@ -79,6 +79,7 @@ fn Perform2DInverseFastFourierTransform(
 		var size_type start_index( y << size_log2 );
 		var size_type end_index= start_index + size_type(size);
 		PerformInverseFastFourierTransform(
+			size_type(size_log2),
 			freqs.subrange( start_index, end_index ),
 			intermediate_buffer.subrange( start_index, end_index ) );
 	}
@@ -97,7 +98,7 @@ fn Perform2DInverseFastFourierTransform(
 			temp_line[ size_type(y) ]= intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ];
 		}
 
-		PerformInverseFastFourierTransform( temp_line, temp_line2 );
+		PerformInverseFastFourierTransform( size_type(size_log2), temp_line, temp_line2 );
 
 		for( auto mut y= 0u; y < size; ++y )
 		{
@@ -107,18 +108,13 @@ fn Perform2DInverseFastFourierTransform(
 }
 
 fn PerformInverseFastFourierTransform(
+	size_type size_log2,
 	ust::array_view_imut</Complexf/> in,
 	ust::array_view_mut</Complexf/> out )
 {
 	assert( in.size() > 0s );
-	assert( ( ( in.size() & (in.size() - 1s) ) == 0s ) );
+	assert( in.size() == ( 1s << size_log2 ) );
 	assert( in.size() == out.size() );
-
-	var size_type mut size_log2= 0s;
-	while( ( 1s << size_log2 ) < in.size() )
-	{
-		++size_log2;
-	}
 
 	for( auto mut i= 0s; i < in.size(); ++i )
 	{
