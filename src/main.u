@@ -167,7 +167,7 @@ fn DrawHeightmap(
 	var u32 heightmap_size = 1u << heightmap_size_log2;
 	var u32 heightmap_size_mask= heightmap_size - 1u;
 
-	var f32 max_depth = f32(heightmap_size) * 1.5f;
+	var f32 max_depth = f32(heightmap_size) * 2.0f;
 
 	var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
 
