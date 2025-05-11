@@ -10,6 +10,12 @@ struct Complex
 {
 	type ThisType= Complex</T/>;
 
+	// Calculate exp( i * power )
+	fn ImaginaryExponent( T power ) : ThisType
+	{
+		return ThisType( ust::cos( power ), ust::sin( power ) );
+	}
+
 	fn constructor( T in_re, T in_im )
 		( re= in_re, im= in_im )
 	{}
