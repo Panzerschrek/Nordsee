@@ -15,28 +15,52 @@ fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 {
 	var u32 heightmap_size= 1u << heightmap_size_log2;
 
-	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_size * heightmap_size ), 0.0f );
+	var u32 heightmap_area= heightmap_size * heightmap_size;
 
-	scoped_array Complexf mut freqs[ size_type( heightmap_size )]( Complexf( 0.0f, 0.0f ) );
-	freqs[2s]= Complexf( 10.0f * f32(heightmap_size), 0.0f );
-	freqs[3s]= Complexf( 6.0f * f32(heightmap_size), 0.0f );
-	freqs[8s]= Complexf( 1.0f * f32(heightmap_size), 0.0f );
+	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_area ), 0.0f );
 
+	scoped_array Complexf mut freqs[ size_type( heightmap_area )]( Complexf( 0.0f, 0.0f ) );
+
+	freqs[ size_type( 2u | ( 3u << heightmap_size_log2 ) ) ]= Complexf( 5.0f * f32(heightmap_area), 0.0f );
+	freqs[ size_type( 7u | ( 5u << heightmap_size_log2 ) ) ]= Complexf( 2.5f * f32(heightmap_area), 0.0f );
+
+	scoped_array Complexf mut rows_transformed[ size_type( heightmap_area ) ]( Complexf( 0.0f, 0.0f ) );
+
+	// Perform per-row inverse discrete Fourier transform.
 	for( auto mut y= 0u; y < heightmap_size; ++y )
 	{
-		// Perform inverse discrete Fourier transform here.
-		var Complexf mut h( 0.0f, 0.0f );
-		var f32 scale= f32(y) * ( c_tau / f32(heightmap_size) );
-		for( auto mut k= 0u; k < heightmap_size; ++k )
+		for( auto mut x= 0u; x < heightmap_size; ++ x )
 		{
-			h+= freqs[size_type(k)] * Complexf::ImaginaryExponent( f32(k) * scale );
-		}
-		h/= f32(heightmap_size);
+			var Complexf mut h( 0.0f, 0.0f );
+			var f32 scale= f32(x) * ( c_tau / f32(heightmap_size) );
+			for( auto mut k= 0u; k < heightmap_size; ++k )
+			{
+				h+=
+					freqs[ size_type( k | ( y << heightmap_size_log2 ) ) ] *
+					Complexf::ImaginaryExponent( f32(k) * scale );
+			}
+			h/= f32(heightmap_size);
 
-		for( auto mut x= 0u; x < heightmap_size; ++x )
+			rows_transformed[ size_type( x | ( y << heightmap_size_log2 ) ) ]= h;
+		}
+	}
+
+	// Perform per-column inverse discrete Fourier transform.
+	for( auto mut x= 0u; x < heightmap_size; ++x )
+	{
+		for( auto mut y= 0u; y < heightmap_size; ++y )
 		{
-			var u32 address = x + (y << heightmap_size_log2);
-			heightmap_data[size_type(address)] = h.re;
+			var Complexf mut h( 0.0f, 0.0f );
+			var f32 scale= f32(y) * ( c_tau / f32(heightmap_size) );
+			for( auto mut k= 0u; k < heightmap_size; ++k )
+			{
+				h+=
+					rows_transformed[ size_type( x | ( k << heightmap_size_log2 ) ) ] *
+					Complexf::ImaginaryExponent( f32(k) * scale );
+			}
+			h/= f32(heightmap_size);
+
+			heightmap_data[ size_type( x | (y << heightmap_size_log2) ) ] = h.re;
 		}
 	}
 
