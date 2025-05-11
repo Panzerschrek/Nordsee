@@ -16,6 +16,11 @@ struct Complex
 		return ThisType( ust::cos( power ), ust::sin( power ) );
 	}
 
+	fn Zero() : ThisType
+	{
+		return ThisType( T(0.0), T(0.0) );
+	}
+
 	fn constructor( T in_re, T in_im )
 		( re= in_re, im= in_im )
 	{}
@@ -125,7 +130,9 @@ struct Complex
 		return re * re + im * im;
 	}
 
+	// Real part.
 	T re;
+	// Imaginary part.
 	T im;
 }
 
