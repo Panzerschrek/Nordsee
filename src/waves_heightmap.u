@@ -1,6 +1,7 @@
 import "/math.u"
 import "/scoped_array.u"
 import "complex.uh"
+import "fourier_transform.uh"
 import "math_constants.uh"
 import "waves_heightmap.uh"
 
@@ -13,8 +14,6 @@ fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 
 	var u32 heightmap_area= heightmap_size * heightmap_size;
 
-	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_area ), 0.0f );
-
 	scoped_array Complexf mut freqs[ size_type( heightmap_area )]( Complexf::Zero() );
 
 	freqs[ size_type( 2u | ( 3u << heightmap_size_log2 ) ) ]= Complexf( 5.0f * f32(heightmap_area), 0.0f );
@@ -23,45 +22,11 @@ fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 	// Frequencies above heightmap_size / 2 represent waves traveling in opposite direction.
 	freqs[ size_type( (heightmap_size - 16u ) | ( 16u << heightmap_size_log2 ) ) ]= Complexf( 0.5f * f32(heightmap_area), 0.0f );
 
-	scoped_array Complexf mut rows_transformed[ size_type( heightmap_area ) ]( Complexf::Zero() );
+	scoped_array Complexf mut intermediate_buffer[ size_type( heightmap_area ) ]( Complexf::Zero() );
 
-	// Perform per-row inverse discrete Fourier transform.
-	for( auto mut y= 0u; y < heightmap_size; ++y )
-	{
-		for( auto mut x= 0u; x < heightmap_size; ++ x )
-		{
-			var Complexf mut h= Complexf::Zero();
-			var f32 scale= f32(x) * ( c_tau / f32(heightmap_size) );
-			for( auto mut k= 0u; k < heightmap_size; ++k )
-			{
-				h+=
-					freqs[ size_type( k | ( y << heightmap_size_log2 ) ) ] *
-					Complexf::ImaginaryExponent( f32(k) * scale );
-			}
-			h/= f32(heightmap_size);
+	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_area ), 0.0f );
 
-			rows_transformed[ size_type( x | ( y << heightmap_size_log2 ) ) ]= h;
-		}
-	}
-
-	// Perform per-column inverse discrete Fourier transform.
-	for( auto mut x= 0u; x < heightmap_size; ++x )
-	{
-		for( auto mut y= 0u; y < heightmap_size; ++y )
-		{
-			var Complexf mut h= Complexf::Zero();
-			var f32 scale= f32(y) * ( c_tau / f32(heightmap_size) );
-			for( auto mut k= 0u; k < heightmap_size; ++k )
-			{
-				h+=
-					rows_transformed[ size_type( x | ( k << heightmap_size_log2 ) ) ] *
-					Complexf::ImaginaryExponent( f32(k) * scale );
-			}
-			h/= f32(heightmap_size);
-
-			heightmap_data[ size_type( x | (y << heightmap_size_log2) ) ] = h.re;
-		}
-	}
+	Perform2DInverseFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, heightmap_data );
 
 	return heightmap_data;
 }

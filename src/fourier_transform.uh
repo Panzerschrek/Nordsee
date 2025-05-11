@@ -1,0 +1,17 @@
+import "/random_access_range.u"
+import "complex.uh"
+
+namespace NS
+{
+
+// Perform inverse Fourier transform of an 2D image in frequency domian of size ( 1 << size_log2 ) x ( 1 << size_log2 ).
+// Writes result into output buffer, but only real parts.
+// Uses intermediate buffer internally.
+// Buffers size should be equal to image area.
+fn Perform2DInverseFourierTransform(
+	u32 size_log2,
+	ust::array_view_imut</Complexf/> freqs,
+	ust::array_view_mut</Complexf/> intermediate_buffer,
+	ust::array_view_mut</f32/> out );
+
+} // namespace NS

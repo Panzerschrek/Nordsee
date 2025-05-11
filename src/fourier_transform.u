@@ -1,0 +1,60 @@
+import "/assert.u"
+import "fourier_transform.uh"
+import "math_constants.uh"
+
+namespace NS
+{
+
+fn Perform2DInverseFourierTransform(
+	u32 size_log2,
+	ust::array_view_imut</Complexf/> freqs,
+	ust::array_view_mut</Complexf/> intermediate_buffer,
+	ust::array_view_mut</f32/> out )
+{
+	var u32 size= 1u << size_log2;
+	var u32 area= size * size;
+
+	assert( freqs.size() == size_type(area) );
+	assert( intermediate_buffer.size() == size_type(area) );
+	assert( out.size() == size_type(area) );
+
+	// Perform per-row inverse discrete Fourier transform.
+	for( auto mut y= 0u; y < size; ++y )
+	{
+		for( auto mut x= 0u; x < size; ++ x )
+		{
+			var Complexf mut h= Complexf::Zero();
+			var f32 scale= f32(x) * ( c_tau / f32(size) );
+			for( auto mut k= 0u; k < size; ++k )
+			{
+				h+=
+					freqs[ size_type( k | ( y << size_log2 ) ) ] *
+					Complexf::ImaginaryExponent( f32(k) * scale );
+			}
+			h/= f32(size);
+
+			intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ]= h;
+		}
+	}
+
+	// Perform per-column inverse discrete Fourier transform.
+	for( auto mut x= 0u; x < size; ++x )
+	{
+		for( auto mut y= 0u; y < size; ++y )
+		{
+			var Complexf mut h= Complexf::Zero();
+			var f32 scale= f32(y) * ( c_tau / f32(size) );
+			for( auto mut k= 0u; k < size; ++k )
+			{
+				h+=
+					intermediate_buffer[ size_type( x | ( k << size_log2 ) ) ] *
+					Complexf::ImaginaryExponent( f32(k) * scale );
+			}
+			h/= f32(size);
+
+			out[ size_type( x | (y << size_log2) ) ] = h.re;
+		}
+	}
+}
+
+} // namespace NS
