@@ -1,15 +1,11 @@
 import "/math.u"
 import "/scoped_array.u"
 import "complex.uh"
+import "math_constants.uh"
 import "waves_heightmap.uh"
 
 namespace NS
 {
-
-// TODO - move constants to separate file.
-// TODO - define PI via TAU instead.
-var f32 c_pi= 3.1415926535f;
-var f32 c_tau= c_pi * 2.0f;
 
 fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 {

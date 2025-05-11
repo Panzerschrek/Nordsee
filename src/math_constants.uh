@@ -1,0 +1,9 @@
+namespace NS
+{
+
+// TODO - define also f64 versions of math constants.
+
+var f32 constexpr c_tau= 6.2831853071795864769f;
+var f32 constexpr c_half_tau= c_tau * 0.5f;
+
+} // namespace NS
