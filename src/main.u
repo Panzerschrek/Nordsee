@@ -137,7 +137,7 @@ fn Main() : i32
 			camera_controller,
 			drawable_surface );
 
-		DrawText( drawable_surface, "some", 10, 30, 0x00FF00FFu, 2u );
+		DrawText( drawable_surface, "some\ntext", 10, 30, 0x00FF00FFu, 2u );
 
 		if( must_lock_surface )
 		{

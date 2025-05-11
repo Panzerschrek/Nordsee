@@ -22,6 +22,10 @@ fn DrawText(
 		}
 
 		var u32 glyph_index= u32(c) - c_first_glyph;
+		if( glyph_index >= c_num_glyphs )
+		{
+			continue;
+		}
 
 		for( var u32 mut glyph_y= 0u; glyph_y < c_glyph_height; ++glyph_y )
 		{
@@ -30,11 +34,11 @@ fn DrawText(
 
 			for( var u32 mut glyph_x= 0u; glyph_x < c_glyph_width; ++glyph_x )
 			{
-				if( (glyph_line_byte & (1u << ((glyph_x & 7u) ^ 7u))) != 0u )
+				if( (glyph_line_byte & (1u << (glyph_x ^ 7u))) != 0u )
 				{
 					for( var u32 mut pix_y= 0u; pix_y < scale; ++pix_y )
 					{
-						auto dst_y = current_y + i32(pix_y) + i32( glyph_y * scale );
+						var i32 dst_y = current_y + i32( pix_y + glyph_y * scale );
 						if( dst_y < 0 || dst_y >= i32(surface.h) )
 						{
 							continue;
@@ -42,7 +46,7 @@ fn DrawText(
 
 						for( var u32 mut pix_x= 0u; pix_x < scale; ++pix_x )
 						{
-							auto dst_x = current_x + i32(pix_x) + i32( glyph_x * scale );
+							var i32 dst_x = current_x + i32( pix_x + glyph_x * scale );
 							if( dst_x >= 0 && dst_x < i32(surface.w) )
 							{
 								surface.data[ size_type(dst_x) + size_type(dst_y) * size_type( surface.pitch ) ] = color;
