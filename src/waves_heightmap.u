@@ -17,9 +17,9 @@ fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_size * heightmap_size ), 0.0f );
 
 	scoped_array f32 mut freqs[ size_type( heightmap_size )]( 0.0f );
-	freqs[2s]= 10.0f;
-	freqs[3s]= 6.0f;
-	freqs[8s]= 1.0f;
+	freqs[2s]= 10.0f * f32(heightmap_size);
+	freqs[3s]= 6.0f * f32(heightmap_size);
+	freqs[8s]= 1.0f * f32(heightmap_size);
 
 	for( auto mut y= 0u; y < heightmap_size; ++y )
 	{
@@ -30,6 +30,7 @@ fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
 		{
 			h+= freqs[size_type(i)] * ust::cos( f32(i) * scale );
 		}
+		h/= f32(heightmap_size);
 
 		for( auto mut x= 0u; x < heightmap_size; ++x )
 		{
