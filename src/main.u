@@ -57,8 +57,9 @@ fn Main() : i32
 		return -1;
 	}
 
-	var u64 mut prev_tick= unsafe( SDL_GetPerformanceCounter() );
+	var u64 start_tick= unsafe( SDL_GetPerformanceCounter() ), mut prev_tick= start_tick;
 	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
+	var u32 mut num_frames_in_last_second= 0u, mut current_displayed_fps= 0u;
 
 	var ust::vector</bool/> mut keyboard_state;
 	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 180.0f ) );
@@ -67,6 +68,18 @@ fn Main() : i32
 	{
 		var u64 cur_tick = unsafe( SDL_GetPerformanceCounter() );
 		var f32 time_delta_s( ust::min( f64(cur_tick - prev_tick) / performace_counter_frequency, 0.5 ) );
+
+		{
+			++num_frames_in_last_second;
+			var u64 prev_second( f64( prev_tick - start_tick ) / performace_counter_frequency );
+			var u64 cur_second( f64(cur_tick - start_tick ) / performace_counter_frequency );
+			if( cur_second > prev_second )
+			{
+				current_displayed_fps= num_frames_in_last_second;
+				num_frames_in_last_second= 0u;
+			}
+		}
+
 		prev_tick= cur_tick;
 
 		var SDL_Event mut event= zero_init;
@@ -137,7 +150,7 @@ fn Main() : i32
 			camera_controller,
 			drawable_surface );
 
-		DrawFPS( drawable_surface, 1234.5f );
+		DrawFPS( drawable_surface, f32(current_displayed_fps) );
 
 		if( must_lock_surface )
 		{
