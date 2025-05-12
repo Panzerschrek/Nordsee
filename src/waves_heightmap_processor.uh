@@ -1,0 +1,30 @@
+import "/vector.u"
+import "color.uh"
+import "complex.uh"
+
+namespace NS
+{
+
+class WavesHeightmapProcessor
+{
+public:
+	fn constructor( u32 heightmap_size_log2 );
+
+	fn GetHeightmapSizeLog2( this ) : u32;
+	fn GetHeightmapData( this ) : ust::array_view_imut</f32/> @( return_inner_references );
+	fn GetColorData( this ) : ust::array_view_imut</Color32/> @( return_inner_references );
+
+	fn Update( mut this );
+
+private:
+	auto return_inner_references= ust::reference_notation::return_inner_references::param0;
+
+private:
+	u32 imut heightmap_size_log2_;
+	ust::vector</Complexf/> imut waves_spectrum_;
+
+	ust::vector</f32/> heightmap_data_;
+	ust::vector</Color32/> color_data_;
+}
+
+} // namespace NS

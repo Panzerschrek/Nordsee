@@ -7,7 +7,7 @@ import "camera_controller.uh"
 import "drawable_surface.uh"
 import "noise_heightmap.uh"
 import "text_printer.uh"
-import "waves_heightmap.uh"
+import "waves_heightmap_processor.uh"
 
 
 pretty_main
@@ -23,13 +23,7 @@ fn Main() : i32
 {
 	ust::stdout_print( "Nordsee\n" );
 
-	var u32 heightmap_size_log2= 8u;
-	var u32 heightmap_area= 1u << ( 2u * heightmap_size_log2 );
-
-	var ust::vector</Complexf/> waves_spectrum= GenerateWavesSpectrum( heightmap_size_log2 );
-
-	var ust::vector</f32/> mut heightmap_data( size_type(heightmap_area), 0.0f );
-	var ust::vector</Color32/> mut color_data( size_type(heightmap_area), 0u );
+	var WavesHeightmapProcessor mut waves_heightmap_processor( 8u );
 
 	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
 
@@ -127,8 +121,7 @@ fn Main() : i32
 
 		camera_controller.Update( time_delta_s, keyboard_state );
 
-		GenerateWavesHeightmap( heightmap_size_log2, waves_spectrum, heightmap_data );
-		GenerateWavesColors( heightmap_size_log2, heightmap_data, color_data );
+		waves_heightmap_processor.Update();
 
 		var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 
@@ -152,9 +145,9 @@ fn Main() : i32
 		};
 
 		DrawHeightmap(
-			heightmap_size_log2,
-			heightmap_data,
-			color_data,
+			waves_heightmap_processor.GetHeightmapSizeLog2(),
+			waves_heightmap_processor.GetHeightmapData(),
+			waves_heightmap_processor.GetColorData(),
 			camera_controller,
 			drawable_surface );
 

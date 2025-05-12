@@ -5,7 +5,6 @@ import "complex.uh"
 namespace NS
 {
 
-
 fn GenerateWavesSpectrum( u32 heightmap_size_log2 ) : ust::vector</Complexf/>;
 
 // Generates heightmap in the output buffer from given spectrum.
