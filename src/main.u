@@ -4,8 +4,9 @@ import "/stdout.u"
 import "/vector.u"
 import "/Nordsee/SDL.uh"
 import "camera_controller.uh"
-import "color.uh"
+import "drawable_surface.uh"
 import "noise_heightmap.uh"
+import "text_printer.uh"
 import "waves_heightmap.uh"
 
 
@@ -56,8 +57,9 @@ fn Main() : i32
 		return -1;
 	}
 
-	var u64 mut prev_tick= unsafe( SDL_GetPerformanceCounter() );
+	var u64 start_tick= unsafe( SDL_GetPerformanceCounter() ), mut prev_tick= start_tick;
 	var f64 performace_counter_frequency( unsafe( SDL_GetPerformanceFrequency() ) );
+	var u32 mut num_frames_in_last_second= 0u, mut current_displayed_fps= 0u;
 
 	var ust::vector</bool/> mut keyboard_state;
 	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 180.0f ) );
@@ -66,6 +68,20 @@ fn Main() : i32
 	{
 		var u64 cur_tick = unsafe( SDL_GetPerformanceCounter() );
 		var f32 time_delta_s( ust::min( f64(cur_tick - prev_tick) / performace_counter_frequency, 0.5 ) );
+
+		{
+			++num_frames_in_last_second;
+			var u64 prev_second( f64( prev_tick - start_tick ) / performace_counter_frequency );
+			var u64 cur_second( f64( cur_tick - start_tick ) / performace_counter_frequency );
+			if( cur_second > prev_second )
+			{
+				// Measure FPS if total number of seconds is changed. This happens (obviously) once in a second.
+				// TODO - measure FPS with fractional precision.
+				current_displayed_fps= num_frames_in_last_second;
+				num_frames_in_last_second= 0u;
+			}
+		}
+
 		prev_tick= cur_tick;
 
 		var SDL_Event mut event= zero_init;
@@ -119,20 +135,24 @@ fn Main() : i32
 
 		var u32 pitch= u32( surface.pitch ) / u32( typeinfo</Color32/>.size_of );
 
+		var DrawableSurface drawable_surface
+		{
+			.w( surface.w ),
+			.h( surface.h ),
+			.pitch= pitch,
+			.data= unsafe( ust::array_view_mut</Color32/>(
+				ust::byte_ptr_cast</Color32/>( surface.pixels ),
+				size_type( pitch * u32(surface.h) ) ) ),
+		};
+
 		DrawHeightmap(
 			heightmap_size_log2,
 			heightmap_data,
 			color_data,
 			camera_controller,
-			DrawableSurface
-			{
-				.w( surface.w ),
-				.h( surface.h ),
-				.pitch= pitch,
-				.data= unsafe( ust::array_view_mut</Color32/>(
-					ust::byte_ptr_cast</Color32/>( surface.pixels ),
-					size_type( pitch * u32(surface.h) ) ) ),
-			});
+			drawable_surface );
+
+		DrawFPS( drawable_surface, f32(current_displayed_fps) );
 
 		if( must_lock_surface )
 		{
@@ -147,14 +167,6 @@ fn Main() : i32
 	unsafe( SDL_Quit() );
 
 	return 0;
-}
-
-struct DrawableSurface
-{
-	u32 w;
-	u32 h;
-	u32 pitch;
-	ust::array_view_mut</Color32/> data;
 }
 
 fn DrawHeightmap(
@@ -228,6 +240,32 @@ fn DrawHeightmap(
 			dst_column[ size_type( u32(dst_row) * surface.pitch ) ]= c_sky_color;
 		}
 	}
+}
+
+fn DrawFPS( DrawableSurface& surface, f32 fps )
+{
+	auto mut text= "   0.0 fps";
+
+	var u32 fps_int= u32(fps);
+
+	if( fps_int >= 1000u )
+	{
+		text[0]= char8( u32('0') + fps_int / 1000u );
+	}
+	if( fps_int >= 100u )
+	{
+		text[1]= char8( u32('0') + fps_int / 100u % 10u );
+	}
+	if( fps_int >= 10u )
+	{
+		text[2]= char8( u32('0') + fps_int / 10u % 10u );
+	}
+	text[3]= char8( u32('0') + fps_int % 10u );
+	text[5]= char8( u32('0') + u32(fps * 10.0f ) % 10u );
+
+	var Color32 color= 0xFFFFFFFFu;
+
+	DrawText( surface, text, i32( surface.w - 84u ), 2, color, 1u );
 }
 
 } // namespace NS

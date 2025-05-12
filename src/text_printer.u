@@ -1,0 +1,70 @@
+import "text_printer.uh"
+
+namespace NS
+{
+
+fn DrawText(
+	DrawableSurface& surface,
+	ust::array_view_imut</char8/> text,
+	i32 start_x, i32 start_y,
+	Color32 color,
+	u32 scale )
+{
+	var i32 mut current_x= start_x, mut current_y= start_y;
+
+	foreach( c : text )
+	{
+		if( c == '\n' )
+		{
+			current_x = start_x;
+			current_y += i32( c_glyph_height * scale );
+			continue;
+		}
+
+		var u32 glyph_index= u32(c) - c_first_glyph;
+		if( glyph_index >= c_num_glyphs )
+		{
+			continue;
+		}
+
+		for( var u32 mut glyph_y= 0u; glyph_y < c_glyph_height; ++glyph_y )
+		{
+			var u32 glyph_line_byte( u8(
+				c_font_bitmap_data[ c_bmp_header_len + glyph_index + ((c_glyph_height - 1u) - glyph_y) * c_num_glyphs ] ) );
+
+			for( var u32 mut glyph_x= 0u; glyph_x < c_glyph_width; ++glyph_x )
+			{
+				if( (glyph_line_byte & (1u << (glyph_x ^ 7u))) != 0u )
+				{
+					for( var u32 mut pix_y= 0u; pix_y < scale; ++pix_y )
+					{
+						var i32 dst_y = current_y + i32( pix_y + glyph_y * scale );
+						if( dst_y < 0 || dst_y >= i32(surface.h) )
+						{
+							continue;
+						}
+
+						for( var u32 mut pix_x= 0u; pix_x < scale; ++pix_x )
+						{
+							var i32 dst_x = current_x + i32( pix_x + glyph_x * scale );
+							if( dst_x >= 0 && dst_x < i32(surface.w) )
+							{
+								surface.data[ size_type(dst_x) + size_type(dst_y) * size_type( surface.pitch ) ] = color;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		current_x += i32( c_glyph_width * scale );
+	}
+}
+
+auto& c_font_bitmap_data= embed</byte8/>( "fixedsys8x18.bmp" );
+
+var u32 c_glyph_width= 8u, c_glyph_height= 18u;
+var u32 c_bmp_header_len= 62u;
+var u32 c_first_glyph= 32u, c_num_glyphs= 96u;
+
+} // namespace NS
