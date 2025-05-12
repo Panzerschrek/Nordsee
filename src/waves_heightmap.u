@@ -42,22 +42,20 @@ fn EvaluateWavesSpectrumInTime(
 		{
 			// TODO - optimize this.
 
+			// Frequencies above half of the spectrum represent waves traveling backwards.
+			var f32 wave_number_x= ( x >= half_heightmap_size ? f32( i32(heightmap_size) - i32(x) ) : f32(x) );
+			var f32 wave_number_y= ( y >= half_heightmap_size ? f32( i32(heightmap_size) - i32(y) ) : f32(y) );
+
+			// Calculate wave number for diagonal waves.
+			// This formula results from wave length equation for a wave with given x/y lengths.
+			var f32 wave_number= ust::sqrt( wave_number_x * wave_number_x + wave_number_y * wave_number_y );
 
 			// See https://en.wikipedia.org/wiki/Gravity_wave
 			// omega = sqrt( g * k )
 			// g - gravity acceleration, k - wave number
+			var f32 omega= ust::sqrt( wave_number );
 
-			// TODO - check if we should calculate averaged wave number instead of using supoerpositions.
-
-			// Frequencies above half of the spectrum represent waves traveling backwards.
-			var f32 x_corrected= ( x >= half_heightmap_size ? f32( i32(heightmap_size) - i32(x) ) : f32(x) );
-			var f32 y_corrected= ( y >= half_heightmap_size ? f32( i32(heightmap_size) - i32(y) ) : f32(y) );
-
-			var f32 mut angular_frequency_x= ust::sqrt( ust::abs( x_corrected ) );
-			var f32 mut angular_frequency_y= ust::sqrt( ust::abs( y_corrected ) );
-
-			var Complexf rotation=
-				Complexf::ImaginaryExponent( time * ( angular_frequency_x + angular_frequency_y ) );
+			var Complexf rotation= Complexf::ImaginaryExponent( time * omega );
 
 			var size_type address( x | (y << heightmap_size_log2) );
 			out_freqs[ address ]= in_freqs[ address ] * rotation;
