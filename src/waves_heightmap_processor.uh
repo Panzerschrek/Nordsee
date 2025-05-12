@@ -25,6 +25,7 @@ private:
 
 	f32 accumulated_time_s_= 0.0f;
 	ust::vector</Complexf/> waves_spectrum_time_evaluated_;
+	ust::vector</Complexf/> intermediate_buffer_;
 	ust::vector</f32/> heightmap_data_;
 	ust::vector</Color32/> color_data_;
 }

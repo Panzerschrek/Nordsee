@@ -17,6 +17,7 @@ fn EvaluateWavesSpectrumInTime(
 fn GenerateWavesHeightmap(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> freqs,
+	ust::array_view_mut</Complexf/> intermediate_buffer,
 	ust::array_view_mut</f32/> out );
 
 fn GenerateWavesColors(

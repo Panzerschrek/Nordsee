@@ -1,8 +1,5 @@
 import "/assert.u"
-import "/math.u"
-import "/scoped_array.u"
 import "fourier_transform.uh"
-import "math_constants.uh"
 import "waves_heightmap.uh"
 
 namespace NS
@@ -66,6 +63,7 @@ fn EvaluateWavesSpectrumInTime(
 fn GenerateWavesHeightmap(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> freqs,
+	ust::array_view_mut</Complexf/> intermediate_buffer,
 	ust::array_view_mut</f32/> out )
 {
 	var u32 heightmap_size= 1u << heightmap_size_log2;
@@ -73,9 +71,8 @@ fn GenerateWavesHeightmap(
 	var u32 heightmap_area= heightmap_size * heightmap_size;
 
 	assert( freqs.size() == out.size() )
+	assert( freqs.size() == intermediate_buffer.size() );
 	assert( freqs.size() == size_type( heightmap_area ) );
-
-	scoped_array Complexf mut intermediate_buffer[ size_type( heightmap_area ) ]( Complexf::Zero() );
 
 	Perform2DInverseFastFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, out );
 }
