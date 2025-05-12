@@ -26,21 +26,21 @@ fn GenerateWavesSpectrum( u32 heightmap_size_log2 ) : ust::vector</Complexf/>
 }
 
 fn GenerateWavesHeightmap(
-	u32 heightmap_size_log2, ust::array_view_imut</Complexf/> freqs ) : ust::vector</f32/>
+	u32 heightmap_size_log2,
+	ust::array_view_imut</Complexf/> freqs,
+	ust::array_view_mut</f32/> out )
 {
 	var u32 heightmap_size= 1u << heightmap_size_log2;
 
 	var u32 heightmap_area= heightmap_size * heightmap_size;
 
+	assert( freqs.size() == out.size() )
 	assert( freqs.size() == size_type( heightmap_area ) );
 
 	scoped_array Complexf mut intermediate_buffer[ size_type( heightmap_area ) ]( Complexf::Zero() );
 
-	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_area ), 0.0f );
+	Perform2DInverseFastFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, out );
 
-	Perform2DInverseFastFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, heightmap_data );
-
-	return heightmap_data;
 }
 
 fn GenerateWavesColors(

@@ -8,8 +8,11 @@ namespace NS
 
 fn GenerateWavesSpectrum( u32 heightmap_size_log2 ) : ust::vector</Complexf/>;
 
+// Generates heightmap in the output buffer from given spectrum.
 fn GenerateWavesHeightmap(
-	u32 heightmap_size_log2, ust::array_view_imut</Complexf/> freqs ) : ust::vector</f32/>;
+	u32 heightmap_size_log2,
+	ust::array_view_imut</Complexf/> freqs,
+	ust::array_view_mut</f32/> out );
 
 fn GenerateWavesColors(
 	u32 heightmap_size_log2,
