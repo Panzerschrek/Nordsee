@@ -36,7 +36,7 @@ fn WavesHeightmapProcessor::Update( mut this, f32 time_delta_s )
 {
 	accumulated_time_s_+= time_delta_s;
 
-	EvaluateWavesSpectrumInTime( waves_spectrum_, waves_spectrum_time_evaluated_, accumulated_time_s_ );
+	EvaluateWavesSpectrumInTime( heightmap_size_log2_, waves_spectrum_, waves_spectrum_time_evaluated_, accumulated_time_s_ );
 	GenerateWavesHeightmap( heightmap_size_log2_, waves_spectrum_time_evaluated_, heightmap_data_ );
 	GenerateWavesColors( heightmap_size_log2_, heightmap_data_, color_data_ );
 }

@@ -8,6 +8,7 @@ namespace NS
 fn GenerateWavesSpectrum( u32 heightmap_size_log2 ) : ust::vector</Complexf/>;
 
 fn EvaluateWavesSpectrumInTime(
+	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> in_freqs,
 	ust::array_view_mut</Complexf/> out_freqs,
 	f32 time );

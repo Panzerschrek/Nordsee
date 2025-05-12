@@ -26,18 +26,42 @@ fn GenerateWavesSpectrum( u32 heightmap_size_log2 ) : ust::vector</Complexf/>
 }
 
 fn EvaluateWavesSpectrumInTime(
+	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> in_freqs,
 	ust::array_view_mut</Complexf/> out_freqs,
 	f32 time )
 {
 	assert( in_freqs.size() == out_freqs.size() );
 
-	var Complexf rotation= Complexf::ImaginaryExponent( time );
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+	var u32 half_heightmap_size= heightmap_size >> 1u;
 
-	foreach( pair : in_freqs.iter().zip( out_freqs.iter() ) )
+	for( var u32 mut y= 0u; y < heightmap_size; ++y )
 	{
-		// TODO - make rotation angle dependent on wave length.
-		pair.second= pair.first * rotation;
+		for( var u32 mut x= 0u; x < heightmap_size; ++x )
+		{
+			var size_type address( x | (y << heightmap_size_log2) );
+			if( x == 0u || y == 0u )
+			{
+				out_freqs[ address ]= in_freqs[ address ];
+				continue;
+			}
+
+			// TODO - check if it's correct.
+			// TODO - optimize this.
+
+			// Frequencies above half of the spectrum represent waves traveling backwards.
+			var f32 x_corrected= ( x >= half_heightmap_size ? f32( i32(x) - i32(heightmap_size) ) : f32(x) );
+			var f32 y_corrected= ( y >= half_heightmap_size ? f32( i32(y) - i32(heightmap_size) ) : f32(y) );
+
+			var f32 wave_length= x_corrected * y_corrected / ust::sqrt( f32( x_corrected * x_corrected + y_corrected * y_corrected ) );
+			var f32 wave_number= c_tau / wave_length;
+			var f32 angular_frequency= ust::sqrt( ust::abs( wave_number ) );
+
+			var Complexf rotation= Complexf::ImaginaryExponent( time * angular_frequency );
+
+			out_freqs[ address ]= in_freqs[ address ] * rotation;
+		}
 	}
 }
 
@@ -56,7 +80,6 @@ fn GenerateWavesHeightmap(
 	scoped_array Complexf mut intermediate_buffer[ size_type( heightmap_area ) ]( Complexf::Zero() );
 
 	Perform2DInverseFastFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, out );
-
 }
 
 fn GenerateWavesColors(
