@@ -121,7 +121,7 @@ fn Main() : i32
 
 		camera_controller.Update( time_delta_s, keyboard_state );
 
-		waves_heightmap_processor.Update();
+		waves_heightmap_processor.Update( time_delta_s );
 
 		var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 

@@ -14,7 +14,7 @@ public:
 	fn GetHeightmapData( this ) : ust::array_view_imut</f32/> @( return_inner_references );
 	fn GetColorData( this ) : ust::array_view_imut</Color32/> @( return_inner_references );
 
-	fn Update( mut this );
+	fn Update( mut this, f32 time_delta_s );
 
 private:
 	auto return_inner_references= ust::reference_notation::return_inner_references::param0;
@@ -23,6 +23,8 @@ private:
 	u32 imut heightmap_size_log2_;
 	ust::vector</Complexf/> imut waves_spectrum_;
 
+	f32 accumulated_time_s_= 0.0f;
+	ust::vector</Complexf/> waves_spectrum_time_evaluated_;
 	ust::vector</f32/> heightmap_data_;
 	ust::vector</Color32/> color_data_;
 }
