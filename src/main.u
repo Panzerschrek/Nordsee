@@ -24,11 +24,15 @@ fn Main() : i32
 	ust::stdout_print( "Nordsee\n" );
 
 	var u32 heightmap_size_log2= 7u;
+	var u32 heightmap_area= 1u << ( 2u * heightmap_size_log2 );
 
 	var ust::vector</Complexf/> waves_spectrum= GenerateWavesSpectrum( heightmap_size_log2 );
-	var ust::vector</f32/> mut heightmap_data( 1s << ( 2u * heightmap_size_log2 ), 0.0f );
+
+	var ust::vector</f32/> mut heightmap_data( size_type(heightmap_area), 0.0f );
 	GenerateWavesHeightmap( heightmap_size_log2, waves_spectrum, heightmap_data );
-	var ust::vector</Color32/> color_data= GenerateWavesColors( heightmap_size_log2, heightmap_data );
+
+	var ust::vector</Color32/> mut color_data( size_type(heightmap_area), 0u );
+	GenerateWavesColors( heightmap_size_log2, heightmap_data, color_data );
 
 	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
 

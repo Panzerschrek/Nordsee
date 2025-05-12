@@ -16,6 +16,7 @@ fn GenerateWavesHeightmap(
 
 fn GenerateWavesColors(
 	u32 heightmap_size_log2,
-	ust::array_view_imut</f32/> heightmap_data ) : ust::vector</Color32/>;
+	ust::array_view_imut</f32/> heightmap_data,
+	ust::array_view_mut</Color32/> out );
 
 } // namespace NS
