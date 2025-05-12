@@ -1,10 +1,15 @@
 import "/vector.u"
 import "color.uh"
+import "complex.uh"
 
 namespace NS
 {
 
-fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>;
+
+fn GenerateWavesSpectrum( u32 heightmap_size_log2 ) : ust::vector</Complexf/>;
+
+fn GenerateWavesHeightmap(
+	u32 heightmap_size_log2, ust::array_view_imut</Complexf/> freqs ) : ust::vector</f32/>;
 
 fn GenerateWavesColors(
 	u32 heightmap_size_log2,
