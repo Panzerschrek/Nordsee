@@ -72,9 +72,11 @@ fn Main() : i32
 		{
 			++num_frames_in_last_second;
 			var u64 prev_second( f64( prev_tick - start_tick ) / performace_counter_frequency );
-			var u64 cur_second( f64(cur_tick - start_tick ) / performace_counter_frequency );
+			var u64 cur_second( f64( cur_tick - start_tick ) / performace_counter_frequency );
 			if( cur_second > prev_second )
 			{
+				// Measure FPS if total number of seconds is changed. This happens (obviously) once in a second.
+				// TODO - measure FPS with fractional precision.
 				current_displayed_fps= num_frames_in_last_second;
 				num_frames_in_last_second= 0u;
 			}
