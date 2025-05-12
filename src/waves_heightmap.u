@@ -40,26 +40,26 @@ fn EvaluateWavesSpectrumInTime(
 	{
 		for( var u32 mut x= 0u; x < heightmap_size; ++x )
 		{
-			var size_type address( x | (y << heightmap_size_log2) );
-			if( x == 0u || y == 0u )
-			{
-				out_freqs[ address ]= in_freqs[ address ];
-				continue;
-			}
-
-			// TODO - check if it's correct.
 			// TODO - optimize this.
 
+
+			// See https://en.wikipedia.org/wiki/Gravity_wave
+			// omega = sqrt( g * k )
+			// g - gravity acceleration, k - wave number
+
+			// TODO - check if we should calculate averaged wave number instead of using supoerpositions.
+
 			// Frequencies above half of the spectrum represent waves traveling backwards.
-			var f32 x_corrected= ( x >= half_heightmap_size ? f32( i32(x) - i32(heightmap_size) ) : f32(x) );
-			var f32 y_corrected= ( y >= half_heightmap_size ? f32( i32(y) - i32(heightmap_size) ) : f32(y) );
+			var f32 x_corrected= ( x >= half_heightmap_size ? f32( i32(heightmap_size) - i32(x) ) : f32(x) );
+			var f32 y_corrected= ( y >= half_heightmap_size ? f32( i32(heightmap_size) - i32(y) ) : f32(y) );
 
-			var f32 wave_length= x_corrected * y_corrected / ust::sqrt( f32( x_corrected * x_corrected + y_corrected * y_corrected ) );
-			var f32 wave_number= c_tau / wave_length;
-			var f32 angular_frequency= ust::sqrt( ust::abs( wave_number ) );
+			var f32 mut angular_frequency_x= ust::sqrt( ust::abs( x_corrected ) );
+			var f32 mut angular_frequency_y= ust::sqrt( ust::abs( y_corrected ) );
 
-			var Complexf rotation= Complexf::ImaginaryExponent( time * angular_frequency );
+			var Complexf rotation=
+				Complexf::ImaginaryExponent( time * ( angular_frequency_x + angular_frequency_y ) );
 
+			var size_type address( x | (y << heightmap_size_log2) );
 			out_freqs[ address ]= in_freqs[ address ] * rotation;
 		}
 	}
