@@ -1,23 +1,55 @@
 import "/assert.u"
 import "fourier_transform.uh"
+import "vec.uh"
 import "waves_heightmap.uh"
 
 namespace NS
 {
 
-fn GenerateWavesSpectrum( u32 heightmap_size_log2 ) : ust::vector</Complexf/>
+fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 {
-	var u32 heightmap_size= 1u << heightmap_size_log2;
+	var u32 size= 1u << size_log2;
 
-	var u32 heightmap_area= heightmap_size * heightmap_size;
+	var u32 area= size * size;
 
-	var ust::vector</Complexf/> mut freqs( size_type( heightmap_area ), Complexf::Zero() );
+	var ust::vector</Complexf/> mut freqs( size_type( area ), Complexf::Zero() );
 
-	freqs[ size_type( 2u | ( 3u << heightmap_size_log2 ) ) ]= Complexf( 5.0f, 0.0f );
-	freqs[ size_type( 7u | ( 5u << heightmap_size_log2 ) ) ]= Complexf( 2.5f, 0.0f );
+	//freqs[ size_type( 2u | ( 3u << heightmap_size_log2 ) ) ]= Complexf( 5.0f, 0.0f );
+	//freqs[ size_type( 7u | ( 5u << heightmap_size_log2 ) ) ]= Complexf( 2.5f, 0.0f );
 
 	// Frequencies above heightmap_size / 2 represent waves traveling in opposite direction.
-	freqs[ size_type( (heightmap_size - 16u ) | ( 16u << heightmap_size_log2 ) ) ]= Complexf( 0.5f, 0.0f );
+	//freqs[ size_type( (heightmap_size - 16u ) | ( 16u << heightmap_size_log2 ) ) ]= Complexf( 0.5f, 0.0f );
+
+	var Vec2f mut wind_direction( 1.0f, 2.0f );
+	wind_direction.Normalize();
+
+	var f32 max_amplitude= 0.01f;
+
+	for( var u32 mut y= 0u; y < size; ++y )
+	{
+		for (var u32 mut x= 0u; x < size; ++x )
+		{
+			var Vec2f k(
+				f32( i32(x) - i32(size >> 1u) ),
+				f32( i32(y) - i32(size >> 1u) ) );
+
+			var f32 k2= k.SquareLength();
+			if( k2 == 0.0f )
+			{
+				continue;
+			}
+			var f32 k4= k2 * k2;
+
+			var f32 dot= k.Dot( wind_direction );
+
+			var f32 scale=
+				ust::exp( -1.0f / ( k2 * max_amplitude * max_amplitude ) ) / k4 * ( dot * dot );
+
+
+			freqs[ size_type( x | (y << size_log2 ) ) ]= Complexf( scale * 1000.0f, 0.0f );
+
+		}
+	}
 
 	return freqs;
 }

@@ -5,7 +5,7 @@ import "complex.uh"
 namespace NS
 {
 
-fn GenerateWavesSpectrum( u32 heightmap_size_log2 ) : ust::vector</Complexf/>;
+fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>;
 
 fn EvaluateWavesSpectrumInTime(
 	u32 heightmap_size_log2,
