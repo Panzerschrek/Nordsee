@@ -104,16 +104,17 @@ fn GenerateWavesColors(
 
 	var u32 heightmap_size= 1u << heightmap_size_log2;
 
-	var Color32 pink= 0x00FF00FFu;
+	var Color32 red= 0x00FF0000u;
+	var Color32 green= 0x0000FF00u;
 
 	for( var u32 mut x= 0u; x < heightmap_size; ++x )
 	{
-		out[ size_type(x) ]= pink;
+		out[ size_type(x) ]= red;
 	}
 
 	for( var u32 mut y= 0u; y < heightmap_size; ++y )
 	{
-		out[ size_type( y << heightmap_size_log2 ) ]= pink;
+		out[ size_type( y << heightmap_size_log2 ) ]= green;
 	}
 }
 
