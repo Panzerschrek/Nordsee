@@ -58,7 +58,7 @@ fn Perform2DInverseCenteredFourierTransform(
 	}
 }
 
-fn Perform2DInverseCenteredFastFourierTransform(
+fn PerformFast2DInverseCenteredFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
@@ -87,7 +87,7 @@ fn Perform2DInverseCenteredFastFourierTransform(
 	{
 		var size_type start_index( y << size_log2 );
 		var size_type end_index= start_index + size_type(size);
-		PerformInverseFastFourierTransform(
+		PerformFastInverseCenteredFourierTransform(
 			size_type(size_log2),
 			freqs.subrange( start_index, end_index ),
 			intermediate_buffer.subrange( start_index, end_index ) );
@@ -105,7 +105,7 @@ fn Perform2DInverseCenteredFastFourierTransform(
 			temp_line[ size_type(y) ]= intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ];
 		}
 
-		PerformInverseFastFourierTransform( size_type(size_log2), temp_line, temp_line2 );
+		PerformFastInverseCenteredFourierTransform( size_type(size_log2), temp_line, temp_line2 );
 
 		for( auto mut y= 0u; y < size; ++y )
 		{
@@ -114,7 +114,7 @@ fn Perform2DInverseCenteredFastFourierTransform(
 	}
 }
 
-fn PerformInverseFastFourierTransform(
+fn PerformFastInverseCenteredFourierTransform(
 	size_type size_log2,
 	ust::array_view_imut</Complexf/> in,
 	ust::array_view_mut</Complexf/> out )
