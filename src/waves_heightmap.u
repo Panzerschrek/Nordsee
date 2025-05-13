@@ -1,5 +1,6 @@
 import "/assert.u"
 import "fourier_transform.uh"
+import "random.uh"
 import "vec.uh"
 import "waves_heightmap.uh"
 
@@ -30,6 +31,8 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 
 	var f32 cut_amplitude_k= 16.0f;
 
+	var PseudoRandomGenerator mut rand_gen;
+
 	for( var u32 mut y= 0u; y < size; ++y )
 	{
 		for (var u32 mut x= 0u; x < size; ++x )
@@ -57,7 +60,9 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 
 			// TODO - select random phase.
 			// TODO - modulate it by a random value with gaussian distribution.
-			freqs[ size_type( x | (y << size_log2 ) ) ]= Complexf( ust::sqrt( power_corrected ), 0.0f );
+
+			var f32 rand_amplitude= f32( rand_gen.Next() ) / f32( PseudoRandomGenerator::c_max );
+			freqs[ size_type( x | (y << size_log2 ) ) ]= rand_amplitude * Complexf( ust::sqrt( power_corrected ), 0.0f );
 
 		}
 	}

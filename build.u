@@ -31,6 +31,7 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 			"src/fourier_transform.u",
 			"src/main.u",
 			"src/noise_heightmap.u",
+			"src/random.u",
 			"src/text_printer.u",
 			"src/waves_heightmap.u",
 			"src/waves_heightmap_processor.u" ),
