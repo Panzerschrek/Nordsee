@@ -133,6 +133,13 @@ fn PerformInverseFastFourierTransform(
 			src_index |= bit_value << b;
 		}
 
+		// Perform shift for centered. TODO - improve this.
+		src_index += in.size() / 2s;
+		if( src_index >= in.size() )
+		{
+			src_index -= in.size();
+		}
+
 		out[i]= in[src_index];
 	}
 
@@ -145,7 +152,7 @@ fn PerformInverseFastFourierTransform(
 
 		for( var size_type mut j= 0s; j < half_m; ++j )
 		{
-			var Complexf omega= Complexf::ImaginaryExponent( f32( ssize_type(j) - ssize_type(half_m) ) * scale );
+			var Complexf omega= Complexf::ImaginaryExponent( f32(j) * scale );
 			for( var size_type mut k= 0s; k < in.size(); k+= m )
 			{
 				var size_type index0= j + k;
