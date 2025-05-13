@@ -1,0 +1,24 @@
+namespace NS
+{
+
+// A simple version of a Linear congruential generator.
+// See https://en.wikipedia.org/wiki/Linear_congruential_generator.
+// Uses numbers multiplier= 22695477, increment= 1, modulus= 2^31.
+class PseudoRandomGenerator
+{
+public:
+	var u32 c_max= 32767u;
+	var u32 c_max_plus_one= 32768u;
+
+public:
+	fn constructor() = default;
+	fn constructor( u32 seed );
+
+	// Produces value in range [ 0, c_max ]
+	fn Next( mut this ) : u32;
+
+private:
+	u32 state_= 0u;
+}
+
+} // namespace NS

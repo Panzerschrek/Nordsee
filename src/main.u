@@ -1,3 +1,4 @@
+import "/assert.u"
 import "/main_wrapper.u"
 import "/math.u"
 import "/stdout.u"
@@ -5,9 +6,10 @@ import "/vector.u"
 import "/Nordsee/SDL.uh"
 import "camera_controller.uh"
 import "drawable_surface.uh"
+import "math_constants.uh"
 import "noise_heightmap.uh"
 import "text_printer.uh"
-import "waves_heightmap.uh"
+import "waves_heightmap_processor.uh"
 
 
 pretty_main
@@ -23,10 +25,7 @@ fn Main() : i32
 {
 	ust::stdout_print( "Nordsee\n" );
 
-	var u32 heightmap_size_log2= 7u;
-
-	var ust::vector</f32/> heightmap_data= GenerateWavesHeightmap( heightmap_size_log2 );
-	var ust::vector</Color32/> color_data= GenerateWavesColors( heightmap_size_log2, heightmap_data );
+	var WavesHeightmapProcessor mut waves_heightmap_processor( 8u );
 
 	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
 
@@ -124,6 +123,8 @@ fn Main() : i32
 
 		camera_controller.Update( time_delta_s, keyboard_state );
 
+		waves_heightmap_processor.Update( time_delta_s );
+
 		var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 
 		var bool must_lock_surface= ( surface.flags & u32(SDL_RLEACCEL) ) != 0u;
@@ -146,10 +147,15 @@ fn Main() : i32
 		};
 
 		DrawHeightmap(
-			heightmap_size_log2,
-			heightmap_data,
-			color_data,
+			waves_heightmap_processor.GetHeightmapSizeLog2(),
+			waves_heightmap_processor.GetHeightmapData(),
+			waves_heightmap_processor.GetColorData(),
 			camera_controller,
+			drawable_surface );
+
+		DebugDrawSpectrum(
+			waves_heightmap_processor.GetHeightmapSizeLog2(),
+			waves_heightmap_processor.GetCurrentSpectrum(),
 			drawable_surface );
 
 		DrawFPS( drawable_surface, f32(current_displayed_fps) );
@@ -238,6 +244,52 @@ fn DrawHeightmap(
 		for(var i32 mut dst_row = prev_row - 1; dst_row >= 0; --dst_row)
 		{
 			dst_column[ size_type( u32(dst_row) * surface.pitch ) ]= c_sky_color;
+		}
+	}
+}
+
+fn DebugDrawSpectrum(
+	u32 size_log2,
+	ust::array_view_imut</Complexf/> spectrum,
+	DrawableSurface& surface )
+{
+	var u32 size= 1u << size_log2;
+	assert( spectrum.size() == size_type( size * size ) );
+
+	var f32 mut max_square_magnitude= 0.0f;
+	foreach( &c : spectrum )
+	{
+		ust::max_assign( max_square_magnitude, c.SquareMagnitude() );
+	}
+
+	var Complexf angle_red= Complexf::ImaginaryExponent( c_tau * 0.0f / 3.0f );
+	var Complexf angle_green= Complexf::ImaginaryExponent( c_tau * 1.0f / 3.0f );
+	var Complexf angle_blue= Complexf::ImaginaryExponent( c_tau * 2.0f / 3.0f );
+
+	var f32 max_magnitude= ust::sqrt( max_square_magnitude );
+
+	for( var u32 mut y= 0u; y < size; ++y )
+	{
+		auto src_row= spectrum.subrange( size_type( y << size_log2 ), size_type( ( y + 1u ) << size_log2 ) );
+		auto dst_row= surface.data.subrange( size_type( y * surface.pitch ), size_type( ( y + 1u ) * surface.pitch ) );
+
+		for( var u32 mut x= 0u; x < size; ++x )
+		{
+			var Complexf& c= src_row[ size_type(x) ];
+
+			var f32 red_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_red.re, angle_red.im ) );
+			var f32 green_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_green.re, angle_green.im ) );
+			var f32 blue_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_blue.re, angle_blue.im ) );
+
+			var f32 red_intensity= ust::sqrt( ust::max( 0.0f, red_dot / max_magnitude ) );
+			var f32 green_intensity= ust::sqrt( ust::max( 0.0f, green_dot / max_magnitude ) );
+			var f32 blue_intensity=  ust::sqrt( ust::max( 0.0f, blue_dot / max_magnitude ) );
+
+			var Color32 color=
+				u32( ust::min( blue_intensity, 1.0f ) * 255.0f ) |
+				( u32( ust::min( green_intensity, 1.0f ) * 255.0f ) << 8u ) |
+				( u32( ust::min( red_intensity, 1.0f ) * 255.0f ) << 16u );
+			dst_row[ size_type(x) ]= color;
 		}
 	}
 }

@@ -1,40 +1,146 @@
-import "/math.u"
-import "/scoped_array.u"
-import "complex.uh"
+import "/assert.u"
 import "fourier_transform.uh"
-import "math_constants.uh"
+import "gaussian_complex_random.uh"
+import "vec.uh"
 import "waves_heightmap.uh"
 
 namespace NS
 {
 
-fn GenerateWavesHeightmap( u32 heightmap_size_log2 ) : ust::vector</f32/>
+fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
+{
+	var u32 size= 1u << size_log2;
+
+	var u32 area= size * size;
+
+	var u32 half_size= size >> 1u;
+
+	var ust::vector</Complexf/> mut freqs( size_type( area ), Complexf::Zero() );
+
+	//freqs[ size_type( ( half_size + 2u ) | ( ( half_size + 3u ) << size_log2 ) ) ]= Complexf( 5.0f, 0.0f );
+	//freqs[ size_type( ( half_size + 7u ) | ( ( half_size + 5u ) << size_log2 ) ) ]= Complexf( 2.5f, 0.0f );
+
+	// Frequencies below heightmap_size / 2 represent waves traveling in opposite direction.
+	//freqs[ size_type( ( half_size - 16u ) | ( ( half_size + 16u ) << size_log2 ) ) ]= Complexf( 0.5f, 0.0f );
+
+	var Vec2f wind_direction= Vec2f( 2.0f, 3.0f ).GetNormalized();
+
+	var f32 max_amplitude_k= 2.0f; // wavenumber of peak waves amplitude.
+	var f32 l= 1.0f / max_amplitude_k;
+
+	// A factor used for reducing amplitudes of short waves.
+	var f32 cut_amplitude_k= 16.0f;
+
+	// How to scale overall waves.
+	var f32 final_amplitudes_scale= 0.5f;
+
+	var PseudoRandomGenerator mut rand_gen;
+
+	for( var u32 mut y= 0u; y < size; ++y )
+	{
+		for (var u32 mut x= 0u; x < size; ++x )
+		{
+			var Complexf &mut dst_complex_amplitude= freqs[ size_type( x | (y << size_log2 ) ) ];
+
+			var Vec2f k( f32( i32(x) - i32(half_size) ), f32( i32(y) - i32(half_size) ) );
+
+			var f32 k2= k.SquareLength();
+			if( k2 == 0.0f )
+			{
+				dst_complex_amplitude= Complexf::Zero();
+				continue;
+			}
+			var f32 k4= k2 * k2;
+
+			var f32 dot= k.Dot( wind_direction );
+			var f32 dot2= dot * dot;
+
+			// Some sort of Phillips spectrum.
+			var f32 power=
+				ust::exp( -1.0f / ( k2 * ( l * l ) ) ) * dot2 / k4;
+
+			// A modification of the spectrum to reduce amplitude of short wavelengths.
+			var f32 power_corrected=
+				power *
+				ust::exp( -( k2 / ( cut_amplitude_k * cut_amplitude_k ) ) );
+
+			// Amplitude depends as asquare root on power.
+			var f32 amplitude_scale= ust::sqrt( power_corrected ) * final_amplitudes_scale;
+
+			// Sample a random complex number with gaussian distribution to select result amplitude scaler.
+			// Real-world waves follow such distribution.
+			// Also this gives random phase.
+			var Complexf rand_complex_amplitude= GenerateGaussianComplexNumber( rand_gen );
+
+			dst_complex_amplitude= rand_complex_amplitude * amplitude_scale;
+		}
+	}
+
+	return freqs;
+}
+
+fn EvaluateWavesSpectrumInTime(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</Complexf/> in_freqs,
+	ust::array_view_mut</Complexf/> out_freqs,
+	f32 time )
+{
+	assert( in_freqs.size() == out_freqs.size() );
+
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+	var u32 half_heightmap_size= heightmap_size >> 1u;
+
+	for( var u32 mut y= 0u; y < heightmap_size; ++y )
+	{
+		for( var u32 mut x= 0u; x < heightmap_size; ++x )
+		{
+			// TODO - optimize this.
+
+			var f32 wave_number_x= f32( i32(x) - i32( half_heightmap_size ) );
+			var f32 wave_number_y= f32( i32(y) - i32( half_heightmap_size ) );
+
+			// Calculate wave number for diagonal waves.
+			// This formula results from wave length equation for a wave with given x/y lengths.
+			var f32 wave_number= ust::sqrt( wave_number_x * wave_number_x + wave_number_y * wave_number_y );
+
+			// See https://en.wikipedia.org/wiki/Gravity_wave
+			// omega = sqrt( g * k )
+			// g - gravity acceleration, k - wave number
+			var f32 omega= ust::sqrt( wave_number );
+
+			var Complexf rotation= Complexf::ImaginaryExponent( time * omega );
+
+			var size_type address( x | (y << heightmap_size_log2) );
+			out_freqs[ address ]= in_freqs[ address ] * rotation;
+		}
+	}
+}
+
+fn GenerateWavesHeightmap(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</Complexf/> freqs,
+	ust::array_view_mut</Complexf/> intermediate_buffer,
+	ust::array_view_mut</f32/> out )
 {
 	var u32 heightmap_size= 1u << heightmap_size_log2;
 
 	var u32 heightmap_area= heightmap_size * heightmap_size;
 
-	scoped_array Complexf mut freqs[ size_type( heightmap_area )]( Complexf::Zero() );
+	assert( freqs.size() == out.size() )
+	assert( freqs.size() == intermediate_buffer.size() );
+	assert( freqs.size() == size_type( heightmap_area ) );
 
-	freqs[ size_type( 2u | ( 3u << heightmap_size_log2 ) ) ]= Complexf( 5.0f, 0.0f );
-	freqs[ size_type( 7u | ( 5u << heightmap_size_log2 ) ) ]= Complexf( 2.5f, 0.0f );
-
-	// Frequencies above heightmap_size / 2 represent waves traveling in opposite direction.
-	freqs[ size_type( (heightmap_size - 16u ) | ( 16u << heightmap_size_log2 ) ) ]= Complexf( 0.5f, 0.0f );
-
-	scoped_array Complexf mut intermediate_buffer[ size_type( heightmap_area ) ]( Complexf::Zero() );
-
-	var ust::vector</f32/> mut heightmap_data( size_type( heightmap_area ), 0.0f );
-
-	Perform2DInverseFastFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, heightmap_data );
-
-	return heightmap_data;
+	PerformFast2DInverseCenteredFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, out );
 }
 
 fn GenerateWavesColors(
 	u32 heightmap_size_log2,
-	ust::array_view_imut</f32/> heightmap_data ) : ust::vector</Color32/>
+	ust::array_view_imut</f32/> heightmap_data,
+	ust::array_view_mut</Color32/> out )
 {
+	assert( heightmap_data.size() == out.size() );
+	assert( heightmap_data.size() == ( 1s << ( 2u * heightmap_size_log2 ) ) );
+
 	var f32 mut min_height= heightmap_data.front(), mut max_height= min_height;
 
 	foreach( h : heightmap_data )
@@ -45,30 +151,27 @@ fn GenerateWavesColors(
 
 	var f32 height_range= max_height - min_height;
 
-	auto mut res= ust::make_vector_from_mapped_range(
-		heightmap_data,
-		lambda[&]( f32 h ) : Color32
-		{
-			var f32 intensity= ust::max( 0.0f, ust::min( (h - min_height) / height_range, 1.0f ) );
-			var u32 intensity_i( intensity * 255.0f );
-			return intensity_i | (intensity_i << 8u) | (intensity_i << 16u);
-		});
+	foreach( pair : heightmap_data.iter().zip( out.iter() ) )
+	{
+		var f32 intensity= ust::max( 0.0f, ust::min( ( pair.first - min_height ) / height_range, 1.0f ) );
+		var u32 intensity_i( intensity * 255.0f );
+		pair.second= intensity_i | (intensity_i << 8u) | (intensity_i << 16u);
+	}
 
 	var u32 heightmap_size= 1u << heightmap_size_log2;
 
-	var Color32 pink= 0x00FF00FFu;
+	var Color32 red= 0x00FF0000u;
+	var Color32 green= 0x0000FF00u;
 
 	for( var u32 mut x= 0u; x < heightmap_size; ++x )
 	{
-		res[ size_type(x) ]= pink;
+		out[ size_type(x) ]= red;
 	}
 
 	for( var u32 mut y= 0u; y < heightmap_size; ++y )
 	{
-		res[ size_type( y << heightmap_size_log2 ) ]= pink;
+		out[ size_type( y << heightmap_size_log2 ) ]= green;
 	}
-
-	return res;
 }
 
 } // namespace NS

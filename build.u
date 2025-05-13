@@ -3,31 +3,52 @@ import "/build_system.uh"
 
 fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::PackageInfo
 {
-	var bool is_host_windows= ust::constexpr_string_equals( compiler::target::os, "windows" );
-	var bool is_target_windows= build_system_interface.GetTargetTriple().operating_system == "windows";
+	var BK::TargetTriple target_triple= build_system_interface.GetTargetTriple();
 
-	// TODO - remove this hardcode.
-	var ust::filesystem_path sdl_install_prefix=
-		( is_host_windows
-			? ust::string_view8("C:/Users/user/Documents/Projects/other/SDL2-2.0.20-vc")
-			: ust::string_view8( "/usr" ) );
+	var bool is_host_windows= ust::constexpr_string_equals( compiler::target::os, "windows" );
+	var bool is_target_windows= target_triple.operating_system == "windows";
+
+	var ust::filesystem_path mut sdl_install_prefix;
+
+	auto mut sdl_install_prefix_opt= build_system_interface.GetConfigurationOption( "sdl_install_prefix" );
+	if( !sdl_install_prefix_opt.empty() )
+	{
+		sdl_install_prefix= sdl_install_prefix_opt.try_take();
+		build_system_interface.LogInfo( ust::concat( "\"sdl_install_prefix\" is \"", sdl_install_prefix, "\"" ) );
+	}
+	else
+	{
+		build_system_interface.LogInfo( "\"sdl_install_prefix\" is not specified, using default value" );
+		sdl_install_prefix= ( is_host_windows ? ust::string_view8("") : ust::string_view8( "/usr" ) );
+	}
+
+	var [ ust::string8, 9 ] mut sources
+	[
+		"src/camera_controller.u",
+		"src/gaussian_complex_random.u",
+		"src/fourier_transform.u",
+		"src/main.u",
+		"src/noise_heightmap.u",
+		"src/random.u",
+		"src/text_printer.u",
+		"src/waves_heightmap.u",
+		"src/waves_heightmap_processor.u"
+	];
 
 	var BK::BuildTarget mut target
 	{
 		.target_type = BK::BuildTargetType::Executable,
 		.name= "Nordsee",
-		.source_files= ust::make_array</ ust::string8 />(
-			"src/camera_controller.u",
-			"src/fourier_transform.u",
-			"src/main.u",
-			"src/noise_heightmap.u",
-			"src/text_printer.u",
-			"src/waves_heightmap.u" ),
+		.source_files= move(sources),
 	};
 
 	if( is_target_windows )
 	{
-		target.external_libraries.push_back( ust::path::join( sdl_install_prefix, "lib/x64/SDL2.lib" ) );
+		target.external_libraries.push_back(
+			ust::path::join(
+				sdl_install_prefix, "lib",
+				( target_triple.architecture == "x86_64" ? "x64" : "x86" ),
+				"SDL2.lib" ) );
 	}
 	else
 	{
@@ -40,7 +61,7 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 	var ust::filesystem_path sdl_header=
 		( is_host_windows
 			? ust::path::join( sdl_install_prefix, "include/SDL.h" )
-			: ust::filesystem_path( "/usr/include/SDL2/SDL.h" ) );
+			: ust::path::join( sdl_install_prefix, "include/SDL2/SDL.h" ) );
 
 	var ust::filesystem_path sdl_header_converted_base_name= "SDL.uh";
 

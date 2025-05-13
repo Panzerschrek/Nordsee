@@ -1,0 +1,50 @@
+import "waves_heightmap_processor.uh"
+import "waves_heightmap.uh"
+
+namespace NS
+{
+
+fn WavesHeightmapProcessor::constructor( u32 heightmap_size_log2 )
+	(
+		heightmap_size_log2_(heightmap_size_log2),
+		waves_spectrum_= GenerateWavesSpectrum( heightmap_size_log2 )
+	)
+{
+	var size_type heightmap_area= 1s << ( 2u * heightmap_size_log2 );
+
+	waves_spectrum_time_evaluated_.resize( heightmap_area, Complexf::Zero() );
+	intermediate_buffer_.resize( heightmap_area, Complexf::Zero() );
+	heightmap_data_.resize( heightmap_area, 0.0f );
+	color_data_.resize( heightmap_area, 0u );
+}
+
+fn WavesHeightmapProcessor::GetHeightmapSizeLog2( this ) : u32
+{
+	return heightmap_size_log2_;
+}
+
+fn WavesHeightmapProcessor::GetHeightmapData( this ) : ust::array_view_imut</f32/> @( return_inner_references )
+{
+	return heightmap_data_;
+}
+
+fn WavesHeightmapProcessor::GetColorData( this ) : ust::array_view_imut</Color32/> @( return_inner_references )
+{
+	return color_data_;
+}
+
+fn WavesHeightmapProcessor::GetCurrentSpectrum( this ) : ust::array_view_imut</Complexf/> @( return_inner_references )
+{
+	return waves_spectrum_time_evaluated_;
+}
+
+fn WavesHeightmapProcessor::Update( mut this, f32 time_delta_s )
+{
+	accumulated_time_s_+= time_delta_s;
+
+	EvaluateWavesSpectrumInTime( heightmap_size_log2_, waves_spectrum_, waves_spectrum_time_evaluated_, accumulated_time_s_ );
+	GenerateWavesHeightmap( heightmap_size_log2_, waves_spectrum_time_evaluated_, intermediate_buffer_, heightmap_data_ );
+	GenerateWavesColors( heightmap_size_log2_, heightmap_data_, color_data_ );
+}
+
+} // namespace NS

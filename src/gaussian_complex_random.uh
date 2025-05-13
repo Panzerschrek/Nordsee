@@ -1,0 +1,10 @@
+import "random.uh"
+import "complex.uh"
+
+namespace NS
+{
+
+// Returns a random complex number with normal distribution, center= 0 and mean= 1.
+fn GenerateGaussianComplexNumber( PseudoRandomGenerator &mut gen ) : Complexf;
+
+} // namespace NS

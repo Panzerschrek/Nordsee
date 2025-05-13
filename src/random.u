@@ -1,0 +1,16 @@
+import "random.uh"
+
+namespace NS
+{
+
+fn PseudoRandomGenerator::constructor( u32 seed )
+	( state_= seed )
+{}
+
+fn PseudoRandomGenerator::Next( mut this ) : u32
+{
+	state_= ( 22695477u * state_ + 1u ) & 0x7FFFFFFFu;
+	return state_ >> 16u;
+}
+
+} // namespace NS
