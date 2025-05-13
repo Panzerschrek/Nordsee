@@ -8,11 +8,19 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 	var bool is_host_windows= ust::constexpr_string_equals( compiler::target::os, "windows" );
 	var bool is_target_windows= target_triple.operating_system == "windows";
 
-	// TODO - remove this hardcode.
-	var ust::filesystem_path sdl_install_prefix=
-		( is_host_windows
-			? ust::string_view8("C:/Users/user/Documents/Projects/other/SDL2-2.0.20-vc")
-			: ust::string_view8( "/usr" ) );
+	var ust::filesystem_path mut sdl_install_prefix;
+
+	auto mut sdl_install_prefix_opt= build_system_interface.GetConfigurationOption( "sdl_install_prefix" );
+	if( !sdl_install_prefix_opt.empty() )
+	{
+		sdl_install_prefix= sdl_install_prefix_opt.try_take();
+		build_system_interface.LogInfo( ust::concat( "\"sdl_install_prefix\" is \"", sdl_install_prefix, "\"" ) );
+	}
+	else
+	{
+		build_system_interface.LogInfo( "\"sdl_install_prefix\" is not specified, using default value" );
+		sdl_install_prefix= ( is_host_windows ? ust::string_view8("") : ust::string_view8( "/usr" ) );
+	}
 
 	var BK::BuildTarget mut target
 	{
@@ -47,7 +55,7 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 	var ust::filesystem_path sdl_header=
 		( is_host_windows
 			? ust::path::join( sdl_install_prefix, "include/SDL.h" )
-			: ust::filesystem_path( "/usr/include/SDL2/SDL.h" ) );
+			: ust::path::join( sdl_install_prefix, "include/SDL2/SDL.h" ) );
 
 	var ust::filesystem_path sdl_header_converted_base_name= "SDL.uh";
 
