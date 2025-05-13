@@ -6,6 +6,7 @@ import "/vector.u"
 import "/Nordsee/SDL.uh"
 import "camera_controller.uh"
 import "drawable_surface.uh"
+import "math_constants.uh"
 import "noise_heightmap.uh"
 import "text_printer.uh"
 import "waves_heightmap_processor.uh"
@@ -261,17 +262,30 @@ fn DebugDrawSpectrum(
 		ust::max_assign( max_square_magnitude, c.SquareMagnitude() );
 	}
 
+	var Complexf angle_red= Complexf::ImaginaryExponent( c_tau * 0.0f / 3.0f );
+	var Complexf angle_green= Complexf::ImaginaryExponent( c_tau * 1.0f / 3.0f );
+	var Complexf angle_blue= Complexf::ImaginaryExponent( c_tau * 2.0f / 3.0f );
+
+	var f32 max_magnitude= ust::sqrt( max_square_magnitude );
+
 	for( var u32 mut y= 0u; y < size; ++y )
 	{
 		for( var u32 mut x= 0u; x < size; ++x )
 		{
 			var Complexf& c= spectrum[ size_type( x | ( y << size_log2 ) ) ];
 
-			var f32 magnitude_scaled= ust::sqrt( c.SquareMagnitude() / max_square_magnitude );
+			var f32 red_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_red.re, angle_red.im ) );
+			var f32 green_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_green.re, angle_green.im ) );
+			var f32 blue_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_blue.re, angle_blue.im ) );
 
-			var u32 brightness( ust::min( 1.0f, ust::pow( magnitude_scaled, 0.25f ) ) * 255.0f );
+			var f32 red_intensity= ust::sqrt( ust::max( 0.0f, red_dot / max_magnitude ) );
+			var f32 green_intensity= ust::sqrt( ust::max( 0.0f, green_dot / max_magnitude ) );
+			var f32 blue_intensity=  ust::sqrt( ust::max( 0.0f, blue_dot / max_magnitude ) );
 
-			var Color32 color= brightness | ( brightness << 8u ) | ( brightness << 16u );
+			var Color32 color=
+				u32( ust::min( blue_intensity, 1.0f ) * 255.0f ) |
+				( u32( ust::min( green_intensity, 1.0f ) * 255.0f ) << 8u ) |
+				( u32( ust::min( red_intensity, 1.0f ) * 255.0f ) << 16u );
 			surface.data[ size_type( x + y * surface.pitch ) ]= color;
 		}
 	}
