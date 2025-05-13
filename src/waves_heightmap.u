@@ -25,7 +25,7 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 	var Vec2f mut wind_direction( 1.0f, 3.0f );
 	wind_direction.Normalize();
 
-	var f32 max_amplitude_k= 2.0f;
+	var f32 max_amplitude_k= 1.0f;
 	var f32 l= 1.0f / max_amplitude_k;
 
 	for( var u32 mut y= 0u; y < size; ++y )
@@ -43,12 +43,12 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 
 			var f32 dot= k.Dot( wind_direction );
 
-			var f32 scale=
+			var f32 power=
 				ust::exp( -1.0f / ( k2 * ( l * l ) ) ) / k4 * ( dot * dot );
 
 			// TODO - select random phase.
 			// TODO - modulate it by a random value with gaussian distribution.
-			freqs[ size_type( x | (y << size_log2 ) ) ]= Complexf( scale * 5.0f, 0.0f );
+			freqs[ size_type( x | (y << size_log2 ) ) ]= Complexf(  ust::sqrt( power ), 0.0f );
 
 		}
 	}
