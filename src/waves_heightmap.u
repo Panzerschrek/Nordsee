@@ -74,9 +74,8 @@ fn EvaluateWavesSpectrumInTime(
 		{
 			// TODO - optimize this.
 
-			// Frequencies above half of the spectrum represent waves traveling backwards.
-			var f32 wave_number_x= ( x >= half_heightmap_size ? f32( i32(heightmap_size) - i32(x) ) : f32(x) );
-			var f32 wave_number_y= ( y >= half_heightmap_size ? f32( i32(heightmap_size) - i32(y) ) : f32(y) );
+			var f32 wave_number_x= f32( i32(x) - i32( half_heightmap_size ) );
+			var f32 wave_number_y= f32( i32(y) - i32( half_heightmap_size ) );
 
 			// Calculate wave number for diagonal waves.
 			// This formula results from wave length equation for a wave with given x/y lengths.
