@@ -13,6 +13,7 @@ public:
 	fn GetHeightmapSizeLog2( this ) : u32;
 	fn GetHeightmapData( this ) : ust::array_view_imut</f32/> @( return_inner_references );
 	fn GetColorData( this ) : ust::array_view_imut</Color32/> @( return_inner_references );
+	fn GetCurrentSpectrum( this ) : ust::array_view_imut</Complexf/> @( return_inner_references );
 
 	fn Update( mut this, f32 time_delta_s );
 

@@ -33,6 +33,11 @@ fn WavesHeightmapProcessor::GetColorData( this ) : ust::array_view_imut</Color32
 	return color_data_;
 }
 
+fn WavesHeightmapProcessor::GetCurrentSpectrum( this ) : ust::array_view_imut</Complexf/> @( return_inner_references )
+{
+	return waves_spectrum_time_evaluated_;
+}
+
 fn WavesHeightmapProcessor::Update( mut this, f32 time_delta_s )
 {
 	accumulated_time_s_+= time_delta_s;

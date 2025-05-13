@@ -1,3 +1,4 @@
+import "/assert.u"
 import "/main_wrapper.u"
 import "/math.u"
 import "/stdout.u"
@@ -151,6 +152,11 @@ fn Main() : i32
 			camera_controller,
 			drawable_surface );
 
+		DebugDrawSpectrum(
+			waves_heightmap_processor.GetHeightmapSizeLog2(),
+			waves_heightmap_processor.GetCurrentSpectrum(),
+			drawable_surface );
+
 		DrawFPS( drawable_surface, f32(current_displayed_fps) );
 
 		if( must_lock_surface )
@@ -237,6 +243,36 @@ fn DrawHeightmap(
 		for(var i32 mut dst_row = prev_row - 1; dst_row >= 0; --dst_row)
 		{
 			dst_column[ size_type( u32(dst_row) * surface.pitch ) ]= c_sky_color;
+		}
+	}
+}
+
+fn DebugDrawSpectrum(
+	u32 size_log2,
+	ust::array_view_imut</Complexf/> spectrum,
+	DrawableSurface& surface )
+{
+	var u32 size= 1u << size_log2;
+	assert( spectrum.size() == size_type( size * size ) );
+
+	var f32 mut max_square_magnitude= 0.0f;
+	foreach( &c : spectrum )
+	{
+		ust::max_assign( max_square_magnitude, c.SquareMagnitude() );
+	}
+
+	for( var u32 mut y= 0u; y < size; ++y )
+	{
+		for( var u32 mut x= 0u; x < size; ++x )
+		{
+			var Complexf& c= spectrum[ size_type( x | ( y << size_log2 ) ) ];
+
+			var f32 magnitude_scaled= ust::sqrt( c.SquareMagnitude() / max_square_magnitude );
+
+			var u32 brightness( ust::min( 1.0f, ust::pow( magnitude_scaled, 0.25f ) ) * 255.0f );
+
+			var Color32 color= brightness | ( brightness << 8u ) | ( brightness << 16u );
+			surface.data[ size_type( x + y * surface.pitch ) ]= color;
 		}
 	}
 }
