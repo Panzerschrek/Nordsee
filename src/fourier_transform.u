@@ -123,6 +123,8 @@ fn PerformFastInverseCenteredFourierTransform(
 	assert( in.size() == ( 1s << size_log2 ) );
 	assert( in.size() == out.size() );
 
+	var size_type half_size= in.size() >> 1s;
+
 	for( auto mut i= 0s; i < in.size(); ++i )
 	{
 		// Change bits order in the index.
@@ -133,11 +135,15 @@ fn PerformFastInverseCenteredFourierTransform(
 			src_index |= bit_value << b;
 		}
 
-		// Perform shift for centered. TODO - improve this.
-		src_index += in.size() / 2s;
-		if( src_index >= in.size() )
+		// Perform shift for centered.
+		// TODO - improve this, perform shifted complex exponents calculation instead.
+		if( src_index < half_size )
 		{
-			src_index -= in.size();
+			src_index += half_size;
+		}
+		else
+		{
+			src_index-= half_size;
 		}
 
 		out[i]= in[src_index];
