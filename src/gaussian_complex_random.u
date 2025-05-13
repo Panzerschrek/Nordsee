@@ -27,5 +27,4 @@ fn GenerateSymmetricIdentityNumber( PseudoRandomGenerator &mut gen ) : f32
 	return ( f32( gen.Next() ) / f32( PseudoRandomGenerator::c_max ) ) * 2.0f - 1.0f;
 }
 
-
 } // namespace NS

@@ -40,11 +40,14 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 	{
 		for (var u32 mut x= 0u; x < size; ++x )
 		{
+			var Complexf &mut dst_complex_amplitude= freqs[ size_type( x | (y << size_log2 ) ) ];
+
 			var Vec2f k( f32( i32(x) - i32(half_size) ), f32( i32(y) - i32(half_size) ) );
 
 			var f32 k2= k.SquareLength();
 			if( k2 == 0.0f )
 			{
+				dst_complex_amplitude= Complexf::Zero();
 				continue;
 			}
 			var f32 k4= k2 * k2;
@@ -69,7 +72,7 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 			// Also this gives random phase.
 			var Complexf rand_complex_amplitude= GenerateGaussianComplexNumber( rand_gen );
 
-			freqs[ size_type( x | (y << size_log2 ) ) ]= rand_complex_amplitude * amplitude_scale;
+			dst_complex_amplitude= rand_complex_amplitude * amplitude_scale;
 		}
 	}
 

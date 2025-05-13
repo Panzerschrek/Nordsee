@@ -270,9 +270,12 @@ fn DebugDrawSpectrum(
 
 	for( var u32 mut y= 0u; y < size; ++y )
 	{
+		auto src_row= spectrum.subrange( size_type( y << size_log2 ), size_type( ( y + 1u ) << size_log2 ) );
+		auto dst_row= surface.data.subrange( size_type( y * surface.pitch ), size_type( ( y + 1u ) * surface.pitch ) );
+
 		for( var u32 mut x= 0u; x < size; ++x )
 		{
-			var Complexf& c= spectrum[ size_type( x | ( y << size_log2 ) ) ];
+			var Complexf& c= src_row[ size_type(x) ];
 
 			var f32 red_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_red.re, angle_red.im ) );
 			var f32 green_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_green.re, angle_green.im ) );
@@ -286,7 +289,7 @@ fn DebugDrawSpectrum(
 				u32( ust::min( blue_intensity, 1.0f ) * 255.0f ) |
 				( u32( ust::min( green_intensity, 1.0f ) * 255.0f ) << 8u ) |
 				( u32( ust::min( red_intensity, 1.0f ) * 255.0f ) << 16u );
-			surface.data[ size_type( x + y * surface.pitch ) ]= color;
+			dst_row[ size_type(x) ]= color;
 		}
 	}
 }
