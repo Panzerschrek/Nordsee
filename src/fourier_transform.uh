@@ -9,7 +9,7 @@ namespace NS
 // Uses intermediate buffer internally.
 // Buffers size should be equal to image area.
 // It's generally slow for large images.
-fn Perform2DInverseFourierTransform(
+fn Perform2DInverseCenteredFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
@@ -17,7 +17,7 @@ fn Perform2DInverseFourierTransform(
 
 // The same as 2D inverse Fourier transform, but much faster.
 // Should produce roughly the same results.
-fn Perform2DInverseFastFourierTransform(
+fn Perform2DInverseCenteredFastFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,

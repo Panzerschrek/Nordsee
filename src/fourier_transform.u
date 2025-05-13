@@ -8,7 +8,7 @@ import "math_constants.uh"
 namespace NS
 {
 
-fn Perform2DInverseFourierTransform(
+fn Perform2DInverseCenteredFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
@@ -32,7 +32,7 @@ fn Perform2DInverseFourierTransform(
 			{
 				h+=
 					freqs[ size_type( k | ( y << size_log2 ) ) ] *
-					Complexf::ImaginaryExponent( f32(k) * scale );
+					Complexf::ImaginaryExponent( f32( i32(k) - i32(size >> 1u) ) * scale );
 			}
 
 			intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ]= h;
@@ -50,7 +50,7 @@ fn Perform2DInverseFourierTransform(
 			{
 				h+=
 					intermediate_buffer[ size_type( x | ( k << size_log2 ) ) ] *
-					Complexf::ImaginaryExponent( f32(k) * scale );
+					Complexf::ImaginaryExponent( f32( i32(k) - i32(size >> 1u) ) * scale );
 			}
 
 			out[ size_type( x | (y << size_log2) ) ] = h.re;
@@ -58,7 +58,7 @@ fn Perform2DInverseFourierTransform(
 	}
 }
 
-fn Perform2DInverseFastFourierTransform(
+fn Perform2DInverseCenteredFastFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
@@ -145,7 +145,7 @@ fn PerformInverseFastFourierTransform(
 
 		for( var size_type mut j= 0s; j < half_m; ++j )
 		{
-			var Complexf omega= Complexf::ImaginaryExponent( f32(j) * scale );
+			var Complexf omega= Complexf::ImaginaryExponent( f32( ssize_type(j) - ssize_type(half_m) ) * scale );
 			for( var size_type mut k= 0s; k < in.size(); k+= m )
 			{
 				var size_type index0= j + k;

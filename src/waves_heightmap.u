@@ -109,7 +109,7 @@ fn GenerateWavesHeightmap(
 	assert( freqs.size() == intermediate_buffer.size() );
 	assert( freqs.size() == size_type( heightmap_area ) );
 
-	Perform2DInverseFastFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, out );
+	Perform2DInverseCenteredFastFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, out );
 }
 
 fn GenerateWavesColors(
