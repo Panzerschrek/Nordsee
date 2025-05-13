@@ -4,12 +4,14 @@ import "complex.uh"
 namespace NS
 {
 
-// Perform inverse Fourier transform of an 2D image in frequency domian of size ( 1 << size_log2 ) x ( 1 << size_log2 ).
+// Perform inverse centered Fourier transform of an 2D image in frequency domian of size ( 1 << size_log2 ) x ( 1 << size_log2 ).
+// It's expected that zero frequency is located at the center,
+// the first half of the image represents negative frequences and the second half represents positive frequencies.
 // Writes result into output buffer, but only real parts.
 // Uses intermediate buffer internally.
 // Buffers size should be equal to image area.
 // It's generally slow for large images.
-fn Perform2DInverseFourierTransform(
+fn Perform2DInverseCenteredFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
@@ -17,7 +19,7 @@ fn Perform2DInverseFourierTransform(
 
 // The same as 2D inverse Fourier transform, but much faster.
 // Should produce roughly the same results.
-fn Perform2DInverseFastFourierTransform(
+fn PerformFast2DInverseCenteredFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
