@@ -17,7 +17,7 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 	var ust::vector</Complexf/> mut freqs( size_type( area ), Complexf::Zero() );
 
 	//freqs[ size_type( ( half_size + 2u ) | ( ( half_size + 3u ) << size_log2 ) ) ]= Complexf( 5.0f, 0.0f );
-	//freqs[ size_type( ( half_sizeu + 7u ) | ( ( half_size + 5u ) << size_log2 ) ) ]= Complexf( 2.5f, 0.0f );
+	//freqs[ size_type( ( half_size + 7u ) | ( ( half_size + 5u ) << size_log2 ) ) ]= Complexf( 2.5f, 0.0f );
 
 	// Frequencies below heightmap_size / 2 represent waves traveling in opposite direction.
 	//freqs[ size_type( ( half_size - 16u ) | ( ( half_size + 16u ) << size_log2 ) ) ]= Complexf( 0.5f, 0.0f );
