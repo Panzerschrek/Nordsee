@@ -23,14 +23,15 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 	// Frequencies below heightmap_size / 2 represent waves traveling in opposite direction.
 	//freqs[ size_type( ( half_size - 16u ) | ( ( half_size + 16u ) << size_log2 ) ) ]= Complexf( 0.5f, 0.0f );
 
-	var Vec2f mut wind_direction( 1.0f, 3.0f );
-	wind_direction.Normalize();
+	var Vec2f wind_direction= Vec2f( 2.0f, 3.0f ).GetNormalized();
 
-	var f32 max_amplitude_k= 2.0f;
+	var f32 max_amplitude_k= 2.0f; // wavenumber of peak waves amplitude.
 	var f32 l= 1.0f / max_amplitude_k;
 
+	// A factor used for reducing amplitudes of short waves.
 	var f32 cut_amplitude_k= 16.0f;
 
+	// How to scale overall waves.
 	var f32 final_amplitudes_scale= 0.5f;
 
 	var PseudoRandomGenerator mut rand_gen;
@@ -60,8 +61,12 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 				power *
 				ust::exp( -( k2 / ( cut_amplitude_k * cut_amplitude_k ) ) );
 
+			// Amplitude depends as asquare root on power.
 			var f32 amplitude_scale= ust::sqrt( power_corrected ) * final_amplitudes_scale;
 
+			// Sample a random complex number with gaussian distribution to select result amplitude scaler.
+			// Real-world waves follow such distribution.
+			// Also this gives random phase.
 			var Complexf rand_complex_amplitude= GenerateGaussianComplexNumber( rand_gen );
 
 			freqs[ size_type( x | (y << size_log2 ) ) ]= rand_complex_amplitude * amplitude_scale;
