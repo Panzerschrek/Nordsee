@@ -1,0 +1,31 @@
+import "gaussian_complex_random.uh"
+import "vec.uh"
+
+namespace NS
+{
+
+// See https://en.wikipedia.org/wiki/Marsaglia_polar_method.
+fn GenerateGaussianComplexNumber( PseudoRandomGenerator &mut gen ) : Complexf
+{
+	loop
+	{
+		var Vec2f v( GenerateSymmetricIdentityNumber( gen ), GenerateSymmetricIdentityNumber( gen ) );
+		var f32 square_length= v.SquareLength();
+		if( square_length == 0.0f || square_length > 1.0f )
+		{
+			continue;
+		}
+
+		var f32 scaler= ust::sqrt( -2.0f * ust::log( square_length ) / square_length );
+
+		return scaler * Complexf( v.x, v.y );
+	}
+}
+
+fn GenerateSymmetricIdentityNumber( PseudoRandomGenerator &mut gen ) : f32
+{
+	return ( f32( gen.Next() ) / f32( PseudoRandomGenerator::c_max ) ) * 2.0f - 1.0f;
+}
+
+
+} // namespace NS

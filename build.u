@@ -22,19 +22,24 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 		sdl_install_prefix= ( is_host_windows ? ust::string_view8("") : ust::string_view8( "/usr" ) );
 	}
 
+	var [ ust::string8, 9 ] mut sources
+	[
+		"src/camera_controller.u",
+		"src/gaussian_complex_random.u",
+		"src/fourier_transform.u",
+		"src/main.u",
+		"src/noise_heightmap.u",
+		"src/random.u",
+		"src/text_printer.u",
+		"src/waves_heightmap.u",
+		"src/waves_heightmap_processor.u"
+	];
+
 	var BK::BuildTarget mut target
 	{
 		.target_type = BK::BuildTargetType::Executable,
 		.name= "Nordsee",
-		.source_files= ust::make_array</ ust::string8 />(
-			"src/camera_controller.u",
-			"src/fourier_transform.u",
-			"src/main.u",
-			"src/noise_heightmap.u",
-			"src/random.u",
-			"src/text_printer.u",
-			"src/waves_heightmap.u",
-			"src/waves_heightmap_processor.u" ),
+		.source_files= move(sources),
 	};
 
 	if( is_target_windows )
