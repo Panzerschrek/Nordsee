@@ -8,7 +8,7 @@ import "camera_controller.uh"
 import "drawable_surface.uh"
 import "math_constants.uh"
 import "noise_heightmap.uh"
-import "performance_counter.uh"
+import "performance_counters.uh"
 import "text_printer.uh"
 import "waves_heightmap_processor.uh"
 
@@ -112,11 +112,14 @@ fn Main() : i32
 
 		camera_controller.Update( time_delta_s, keyboard_state );
 
-		performance_counters.total_heightmap_generation.RunWithMeasurement(
-			lambda[&]()
-			{
-				waves_heightmap_processor.Update( time_delta_s );
-			} );
+		{
+			auto &mut sub_countrers= performance_counters.waves_heightmap_processor;
+			performance_counters.total_heightmap_generation.RunWithMeasurement(
+				lambda[&]()
+				{
+					waves_heightmap_processor.Update( time_delta_s, sub_countrers );
+				} );
+		}
 
 		var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 
@@ -309,12 +312,6 @@ fn DrawFPS( DrawableSurface& surface, f32 frame_duration_s )
 	DrawText( surface, frame_time_text, i32( surface.w - 76u ), 20, color, 1u );
 }
 
-struct PerformanceCounters
-{
-	PerformanceCounter total_heightmap_generation;
-	PerformanceCounter heightmap_rendering;
-}
-
 fn DrawPerformanceCounters(
 	DrawableSurface& surface,
 	PerformanceCounters& counters )
@@ -332,6 +329,24 @@ fn DrawPerformanceCounters(
 	auto mut row= 0;
 	auto row_step= 18;
 
+	{
+		auto mut text= "Spectrum in time evaluation:    0.0 ms";
+		stringify_value( 1000.0f * counters.waves_heightmap_processor.spectrum_in_time_evaluation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Heightmap generation:    0.0 ms";
+		stringify_value( 1000.0f * counters.waves_heightmap_processor.heightmap_generation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Colors generation:    0.0 ms";
+		stringify_value( 1000.0f * counters.waves_heightmap_processor.colors_generation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
 	{
 		auto mut text= "Total heightmap generation:    0.0 ms";
 		stringify_value( 1000.0f * counters.total_heightmap_generation.GetAverageDurationS(), text );

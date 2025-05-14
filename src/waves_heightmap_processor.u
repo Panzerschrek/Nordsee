@@ -38,13 +38,30 @@ fn WavesHeightmapProcessor::GetCurrentSpectrum( this ) : ust::array_view_imut</C
 	return waves_spectrum_time_evaluated_;
 }
 
-fn WavesHeightmapProcessor::Update( mut this, f32 time_delta_s )
+fn WavesHeightmapProcessor::Update(
+	mut this,
+	f32 time_delta_s,
+	WavesHeightmapProcessorPerformanceCounters &mut performance_counters )
 {
 	accumulated_time_s_+= time_delta_s;
 
-	EvaluateWavesSpectrumInTime( heightmap_size_log2_, waves_spectrum_, waves_spectrum_time_evaluated_, accumulated_time_s_ );
-	GenerateWavesHeightmap( heightmap_size_log2_, waves_spectrum_time_evaluated_, intermediate_buffer_, heightmap_data_ );
-	GenerateWavesColors( heightmap_size_log2_, heightmap_data_, color_data_ );
+	performance_counters.spectrum_in_time_evaluation.RunWithMeasurement(
+		lambda[&t= this]()
+		{
+			EvaluateWavesSpectrumInTime( t.heightmap_size_log2_, t.waves_spectrum_, t.waves_spectrum_time_evaluated_, t.accumulated_time_s_ );
+		} );
+
+	performance_counters.heightmap_generation.RunWithMeasurement(
+		lambda[&t= this]()
+		{
+			GenerateWavesHeightmap( t.heightmap_size_log2_, t.waves_spectrum_time_evaluated_, t.intermediate_buffer_, t.heightmap_data_ );
+		} );
+
+	performance_counters.colors_generation.RunWithMeasurement(
+		lambda[&t= this]()
+		{
+			GenerateWavesColors( t.heightmap_size_log2_, t.heightmap_data_, t.color_data_ );
+		} );
 }
 
 } // namespace NS
