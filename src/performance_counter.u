@@ -1,0 +1,50 @@
+import "/assert.u"
+import "/Nordsee/SDL.uh"
+import "performance_counter.uh"
+
+namespace NS
+{
+
+fn PerformanceCounter::constructor()
+	(
+		window_size_( 100 ),
+		system_performace_counter_frequency_( unsafe( SDL_GetPerformanceFrequency() ) )
+	)
+{}
+
+fn PerformanceCounter::AddMeasurement( mut this, TimePoint start_time, TimePoint end_time )
+{
+	assert( start_time <= end_time );
+	var f32 duration_s= f32( end_time - start_time ) / f32( system_performace_counter_frequency_ );
+
+	measurements_window_.push_back( duration_s );
+
+	if( measurements_window_.size() > window_size_ )
+	{
+		// TODO - add vector::pop_front method.
+		for( auto mut i= 0s; i + 1s < measurements_window_.size(); ++i )
+		{
+			measurements_window_[i]= measurements_window_[i + 1s];
+		}
+
+		measurements_window_.drop_back();
+	}
+}
+
+fn PerformanceCounter::GetCurrentTime( this ) : TimePoint
+{
+	return unsafe( SDL_GetPerformanceCounter() );
+}
+
+fn PerformanceCounter::GetAverageTimeS( this ) : f32
+{
+	var f32 mut sum= 0.0f;
+	foreach( v : measurements_window_ )
+	{
+		sum+= v;
+	}
+
+	return sum / f32( measurements_window_.size() );
+}
+
+} // namespace NS

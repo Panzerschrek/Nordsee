@@ -1,0 +1,27 @@
+import "/vector.u"
+
+namespace NS
+{
+
+class PerformanceCounter
+{
+public:
+	type TimePoint= u64;
+
+public:
+	fn constructor();
+
+	fn AddMeasurement( mut this, TimePoint start_time, TimePoint end_time );
+
+	fn GetCurrentTime( this ) : TimePoint;
+
+	fn GetAverageTimeS( this ) : f32;
+
+private:
+	size_type imut window_size_;
+	u64 imut system_performace_counter_frequency_;
+
+	ust::vector</f32/> measurements_window_;
+}
+
+} // namespace NS
