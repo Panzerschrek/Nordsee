@@ -318,11 +318,11 @@ fn DrawPerformanceCounters(
 {
 	var Color32 color= 0xFFFFFFFFu;
 
-	auto stringify_value=
+	auto stringify_value_as_milliseconds=
 		lambda[]( f32 val, ust::array_view_mut</char8/> pattern )
 		{
 			var size_type s= pattern.size();
-			StringifyValueInFourPointOneFormat( val, pattern.subrange_start( s - 9s ) );
+			StringifyValueInFourPointOneFormat( 1000.0f * val, pattern.subrange_start( s - 9s ) );
 		};
 
 	auto row_step= 18;
@@ -332,31 +332,31 @@ fn DrawPerformanceCounters(
 
 	{
 		auto mut text= "Spectrum in time evaluation:    0.0 ms";
-		stringify_value( 1000.0f * counters.waves_heightmap_processor.spectrum_in_time_evaluation.GetAverageDurationS(), text );
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.spectrum_in_time_evaluation.GetAverageDurationS(), text );
 		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
 		++row;
 	}
 	{
 		auto mut text= "Heightmap generation:    0.0 ms";
-		stringify_value( 1000.0f * counters.waves_heightmap_processor.heightmap_generation.GetAverageDurationS(), text );
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.heightmap_generation.GetAverageDurationS(), text );
 		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
 		++row;
 	}
 	{
 		auto mut text= "Colors generation:    0.0 ms";
-		stringify_value( 1000.0f * counters.waves_heightmap_processor.colors_generation.GetAverageDurationS(), text );
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.colors_generation.GetAverageDurationS(), text );
 		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
 		++row;
 	}
 	{
 		auto mut text= "Total heightmap generation:    0.0 ms";
-		stringify_value( 1000.0f * counters.total_heightmap_generation.GetAverageDurationS(), text );
+		stringify_value_as_milliseconds( counters.total_heightmap_generation.GetAverageDurationS(), text );
 		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
 		++row;
 	}
 	{
 		auto mut text= "Heightmap rendering:    0.0 ms";
-		stringify_value( 1000.0f * counters.heightmap_rendering.GetAverageDurationS(), text );
+		stringify_value_as_milliseconds( counters.heightmap_rendering.GetAverageDurationS(), text );
 		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
 		++row;
 	}
