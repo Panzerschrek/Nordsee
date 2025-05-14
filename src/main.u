@@ -294,50 +294,18 @@ fn DebugDrawSpectrum(
 fn DrawFPS( DrawableSurface& surface, f32 frame_duration_s )
 {
 	auto mut text= "   0.0 fps";
-
-	var f32 fps= 1.0f / frame_duration_s;
-	var u32 fps_int= u32(fps);
-
-	if( fps_int >= 1000u )
-	{
-		text[0]= char8( u32('0') + fps_int / 1000u );
-	}
-	if( fps_int >= 100u )
-	{
-		text[1]= char8( u32('0') + fps_int / 100u % 10u );
-	}
-	if( fps_int >= 10u )
-	{
-		text[2]= char8( u32('0') + fps_int / 10u % 10u );
-	}
-	text[3]= char8( u32('0') + fps_int % 10u );
-	text[5]= char8( u32('0') + u32(fps * 10.0f ) % 10u );
+	StringifyValueInFourPointOneFormat( 1.0f / frame_duration_s, text );
 
 	var Color32 color= 0xFFFFFFFFu;
 
 	DrawText( surface, text, i32( surface.w - 84u ), 2, color, 1u );
 
 	var f32 frame_duration_ms= 1000.0f * frame_duration_s;
-	var u32 frame_duration_ms_int( frame_duration_ms );
 
-	auto mut frame_time_text= "   0.0ms";
+	auto mut frame_time_text= "   0.0 ms";
+	StringifyValueInFourPointOneFormat( frame_duration_ms, frame_time_text );
 
-	if( frame_duration_ms_int >= 1000u )
-	{
-		frame_time_text[0]= char8( u32('0') + frame_duration_ms_int / 1000u );
-	}
-	if( frame_duration_ms_int >= 100u )
-	{
-		frame_time_text[1]= char8( u32('0') + frame_duration_ms_int / 100u % 10u );
-	}
-	if( frame_duration_ms_int >= 10u )
-	{
-		frame_time_text[2]= char8( u32('0') + frame_duration_ms_int / 10u % 10u );
-	}
-	frame_time_text[3]= char8( u32('0') + frame_duration_ms_int % 10u );
-	frame_time_text[5]= char8( u32('0') + u32( frame_duration_ms * 10.0f ) % 10u );
-
-	DrawText( surface, frame_time_text, i32( surface.w - 68u ), 20, color, 1u );
+	DrawText( surface, frame_time_text, i32( surface.w - 76u ), 20, color, 1u );
 }
 
 struct PerformanceCounters
@@ -349,31 +317,34 @@ fn DrawPerformanceCounters(
 	DrawableSurface& surface,
 	PerformanceCounters& counters )
 {
-	ust::ignore_unused( counters );
-
 	var f32 duration_ms= 1000.0f * counters.heightmap_rendering.GetAverageDurationS();
-	var u32 duration_ms_int( duration_ms );
 
-	auto mut text= "   0.0ms";
-	if( duration_ms_int >= 1000u )
-	{
-		text[0]= char8( u32('0') + duration_ms_int / 1000u );
-	}
-	if( duration_ms_int >= 100u )
-	{
-		text[1]= char8( u32('0') + duration_ms_int / 100u % 10u );
-	}
-	if( duration_ms_int >= 10u )
-	{
-		text[2]= char8( u32('0') + duration_ms_int / 10u % 10u );
-	}
-	text[3]= char8( u32('0') + duration_ms_int % 10u );
-	text[5]= char8( u32('0') + u32(duration_ms * 10.0f ) % 10u );
-
+	auto mut text= "   0.0 ms";
+	StringifyValueInFourPointOneFormat( duration_ms, text );
 
 	var Color32 color= 0xFFFFFFFFu;
 
 	DrawText( surface, text, 0, 400, color, 1u );
+}
+
+fn StringifyValueInFourPointOneFormat( f32 val, ust::array_view_mut</char8/> text )
+{
+	var u32 val_int( val );
+
+	if( val_int >= 1000u )
+	{
+		text[0s]= char8( u32('0') + val_int / 1000u );
+	}
+	if( val_int >= 100u )
+	{
+		text[1s]= char8( u32('0') + val_int / 100u % 10u );
+	}
+	if( val_int >= 10u )
+	{
+		text[2s]= char8( u32('0') + val_int / 10u % 10u );
+	}
+	text[3s]= char8( u32('0') + val_int % 10u );
+	text[5s]= char8( u32('0') + u32(val * 10.0f ) % 10u );
 }
 
 } // namespace NS
