@@ -199,6 +199,17 @@ fn DrawHeightmap(
 	var f32 ray_rotate_cos = ust::cos(cam_angle);
 	var f32 ray_rotate_sin = ust::sin(cam_angle);
 
+	var f32 constexpr start_depth_base= 2.0f;
+	var f32 constexpr depth_power_factor= 1.01f;
+
+	// Offset start depth of each second column by square root of depth power factor.
+	// Doing so we can hide artifacts of step-by-step rendering caused by too heigh value of the depth factor.
+	var [ f32, 2 ] start_depth
+	[
+		start_depth_base,
+		start_depth_base * ust::sqrt( depth_power_factor ),
+	];
+
 	// Process columns.
 	// Draw columns in pairs effectively reducing horizontal resolution by 2,
 	// since it's too expensive to render each column properly because of poor cache-locality of column-based rendering into a row-based framebuffer.
@@ -211,7 +222,9 @@ fn DrawHeightmap(
 
 		var i32 mut prev_row( surface.h );
 
-		for( var f32 mut depth= 2.0f; depth < max_depth; depth *= 1.004f )
+		for( var f32 mut depth= start_depth[ (column >> 1u) & 1u ];
+			depth < max_depth;
+			depth *= depth_power_factor )
 		{
 			var Vec2f ray_vec( depth, ray_side_offset * depth );
 			var Vec2f ray_vec_rotated(
