@@ -1,4 +1,5 @@
 import "/assert.u"
+import "/scoped_array.u"
 import "fourier_transform.uh"
 import "gaussian_complex_random.uh"
 import "vec.uh"
@@ -90,18 +91,28 @@ fn EvaluateWavesSpectrumInTime(
 	var u32 heightmap_size= 1u << heightmap_size_log2;
 	var u32 half_heightmap_size= heightmap_size >> 1u;
 
+	scoped_array f32 mut wave_numbers_squared[ size_type( heightmap_size ) ]( 0.0f );
+	for( auto mut i= 0u; i < heightmap_size; ++i )
+	{
+		var f32 wave_number= f32( i32(i) - i32( half_heightmap_size ) );
+		wave_numbers_squared[ size_type(i) ]= wave_number * wave_number;
+	}
+
 	for( var u32 mut y= 0u; y < heightmap_size; ++y )
 	{
+		var f32 wave_number_squared_y= wave_numbers_squared[ size_type(y) ];
+
+		var size_type start_index( y << heightmap_size_log2 ), end_index( ( y + 1u ) << heightmap_size_log2 );
+		auto in_row= in_freqs.subrange( start_index, end_index );
+		auto out_row= out_freqs.subrange( start_index, end_index );
+
 		for( var u32 mut x= 0u; x < heightmap_size; ++x )
 		{
-			// TODO - optimize this.
-
-			var f32 wave_number_x= f32( i32(x) - i32( half_heightmap_size ) );
-			var f32 wave_number_y= f32( i32(y) - i32( half_heightmap_size ) );
+			var f32 wave_number_squared_x= wave_numbers_squared[ size_type(x) ];
 
 			// Calculate wave number for diagonal waves.
 			// This formula results from wave length equation for a wave with given x/y lengths.
-			var f32 wave_number= ust::sqrt( wave_number_x * wave_number_x + wave_number_y * wave_number_y );
+			var f32 wave_number= ust::sqrt( wave_number_squared_x + wave_number_squared_y );
 
 			// See https://en.wikipedia.org/wiki/Gravity_wave
 			// omega = sqrt( g * k )
@@ -110,8 +121,7 @@ fn EvaluateWavesSpectrumInTime(
 
 			var Complexf rotation= Complexf::ImaginaryExponent( time * omega );
 
-			var size_type address( x | (y << heightmap_size_log2) );
-			out_freqs[ address ]= in_freqs[ address ] * rotation;
+			out_row[ size_type(x) ]= in_row[ size_type(x) ] * rotation;
 		}
 	}
 }
