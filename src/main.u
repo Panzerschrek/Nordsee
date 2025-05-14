@@ -325,9 +325,10 @@ fn DrawPerformanceCounters(
 			StringifyValueInFourPointOneFormat( val, pattern.subrange_start( s - 9s ) );
 		};
 
-	auto mut y_offset= 400;
-	auto mut row= 0;
 	auto row_step= 18;
+	auto num_rows= 5;
+	auto mut y_offset= i32(surface.h) - num_rows * row_step;
+	auto mut row= 0;
 
 	{
 		auto mut text= "Spectrum in time evaluation:    0.0 ms";
