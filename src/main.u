@@ -200,7 +200,10 @@ fn DrawHeightmap(
 	var f32 ray_rotate_sin = ust::sin(cam_angle);
 
 	// Process columns.
-	for( var u32 mut column= 0u; column < u32( surface.w ); ++column )
+	// Draw columns in pairs effectively reducing horizontal resolution by 2,
+	// since it's too expensive to render each column properly because of poor cache-locality of column-based rendering into a row-based framebuffer.
+	var u32 max_column= surface.w - 1u;
+	for( var u32 mut column= 0u; column < max_column; column+= 2u )
 	{
 		var f32 ray_side_offset = (f32(surface.w) * 0.5f - f32(column)) / screen_scale;
 
@@ -235,7 +238,9 @@ fn DrawHeightmap(
 			var i32 min_row= ust::max(row, 0);
 			for( var i32 mut dst_row = prev_row - 1; dst_row >= min_row; --dst_row)
 			{
-				dst_column[ size_type( u32(dst_row) * surface.pitch ) ]= color;
+				var size_type index( u32(dst_row) * surface.pitch );
+				dst_column[ index ]= color;
+				dst_column[ index + 1s ]= color;
 			}
 
 			prev_row = min_row;
@@ -244,7 +249,9 @@ fn DrawHeightmap(
 		// Fill remaining sky with fog.
 		for(var i32 mut dst_row = prev_row - 1; dst_row >= 0; --dst_row)
 		{
-			dst_column[ size_type( u32(dst_row) * surface.pitch ) ]= c_sky_color;
+			var size_type index( u32(dst_row) * surface.pitch );
+			dst_column[ index ]= c_sky_color;
+			dst_column[ index + 1s ]= c_sky_color;
 		}
 	}
 }
