@@ -201,7 +201,7 @@ fn PerformFastInverseCenteredFourierTransform(
 
 		for( var size_type mut j= 0s; j < half_m; ++j )
 		{
-			var Complexf omega= complex_multipliers[omega_index];
+			var Complexf& omega= complex_multipliers[omega_index];
 			++omega_index;
 			for( var size_type mut k= 0s; k < in.size(); k+= m )
 			{
