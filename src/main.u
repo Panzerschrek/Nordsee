@@ -112,7 +112,14 @@ fn Main() : i32
 
 		camera_controller.Update( time_delta_s, keyboard_state );
 
-		waves_heightmap_processor.Update( time_delta_s );
+		{
+			auto start_time= performance_counters.total_heightmap_generation.GetCurrentTime();
+
+			waves_heightmap_processor.Update( time_delta_s );
+
+			auto end_time= performance_counters.total_heightmap_generation.GetCurrentTime();
+			performance_counters.total_heightmap_generation.AddMeasurement( start_time, end_time );
+		}
 
 		var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 
@@ -310,6 +317,7 @@ fn DrawFPS( DrawableSurface& surface, f32 frame_duration_s )
 
 struct PerformanceCounters
 {
+	PerformanceCounter total_heightmap_generation;
 	PerformanceCounter heightmap_rendering;
 }
 
@@ -317,14 +325,31 @@ fn DrawPerformanceCounters(
 	DrawableSurface& surface,
 	PerformanceCounters& counters )
 {
-	var f32 duration_ms= 1000.0f * counters.heightmap_rendering.GetAverageDurationS();
-
-	auto mut text= "   0.0 ms";
-	StringifyValueInFourPointOneFormat( duration_ms, text );
-
 	var Color32 color= 0xFFFFFFFFu;
 
-	DrawText( surface, text, 0, 400, color, 1u );
+	auto stringify_value=
+		lambda[]( f32 val, ust::array_view_mut</char8/> pattern )
+		{
+			var size_type s= pattern.size();
+			StringifyValueInFourPointOneFormat( val, pattern.subrange_start( s - 9s ) );
+		};
+
+	auto mut y_offset= 400;
+	auto mut row= 0;
+	auto row_step= 18;
+
+	{
+		auto mut text= "Total heightmap generation:    0.0 ms";
+		stringify_value( 1000.0f * counters.total_heightmap_generation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Heightmap rendering:    0.0 ms";
+		stringify_value( 1000.0f * counters.heightmap_rendering.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
 }
 
 fn StringifyValueInFourPointOneFormat( f32 val, ust::array_view_mut</char8/> text )
