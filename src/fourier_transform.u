@@ -161,19 +161,25 @@ fn PrecalculateCenteredFFTIndicesPermutation( size_type size_log2, ust::array_vi
 
 fn PrecalculateCenteredFFTComplexMultipliers( size_type size_log2, ust::array_view_mut</Complexf/> out )
 {
+	assert( out.size() == ( 1s << size_log2 ) );
+
 	var size_type mut dst= 0s;
 	for( var size_type mut s= 0s; s < size_log2; ++s )
 	{
 		var size_type half_m= 1s << s;
 		var size_type m= 1s << ( s + 1s );
 
+		var f32 scale= c_tau / f32(m);
+
 		for( var size_type mut j= 0s; j < half_m; ++j )
 		{
-			var Complexf omega= Complexf::ImaginaryExponent( f32(j) * (c_tau / f32(m)) );
-			out[dst]= omega;
+			out[dst]= Complexf::ImaginaryExponent( f32(j) * scale );
 			++dst;
 		}
 	}
+
+	// We require number of values by one less than input size.
+	assert( dst == out.size() - 1s );
 }
 
 fn PerformFastInverseCenteredFourierTransform(
