@@ -14,8 +14,7 @@ fn PerformanceCounter::constructor()
 
 fn PerformanceCounter::AddMeasurement( mut this, TimePoint start_time, TimePoint end_time )
 {
-	assert( start_time <= end_time );
-	var f32 duration_s= f32( end_time - start_time ) / f32( system_performace_counter_frequency_ );
+	var f32 duration_s= CalculateDiffS( start_time, end_time );
 
 	measurements_window_.push_back( duration_s );
 
@@ -34,6 +33,12 @@ fn PerformanceCounter::AddMeasurement( mut this, TimePoint start_time, TimePoint
 fn PerformanceCounter::GetCurrentTime( this ) : TimePoint
 {
 	return unsafe( SDL_GetPerformanceCounter() );
+}
+
+fn PerformanceCounter::CalculateDiffS( this, TimePoint start_time, TimePoint end_time ) : f32
+{
+	assert( start_time <= end_time );
+	return f32( end_time - start_time ) / f32( system_performace_counter_frequency_ );
 }
 
 fn PerformanceCounter::GetAverageTimeS( this ) : f32
