@@ -146,7 +146,7 @@ fn Main() : i32
 			waves_heightmap_processor.GetCurrentSpectrum(),
 			drawable_surface );
 
-		DrawFPS( drawable_surface, 1.0f / frame_time_performance_counter.GetAverageTimeS() );
+		DrawFPS( drawable_surface, frame_time_performance_counter.GetAverageTimeS() );
 
 		if( must_lock_surface )
 		{
@@ -282,10 +282,11 @@ fn DebugDrawSpectrum(
 	}
 }
 
-fn DrawFPS( DrawableSurface& surface, f32 fps )
+fn DrawFPS( DrawableSurface& surface, f32 frame_time_s )
 {
 	auto mut text= "   0.0 fps";
 
+	var f32 fps= 1.0f / frame_time_s;
 	var u32 fps_int= u32(fps);
 
 	if( fps_int >= 1000u )
@@ -307,7 +308,7 @@ fn DrawFPS( DrawableSurface& surface, f32 fps )
 
 	DrawText( surface, text, i32( surface.w - 84u ), 2, color, 1u );
 
-	var f32 frame_time_ms= 1000.0f / fps;
+	var f32 frame_time_ms= 1000.0f * frame_time_s;
 	var u32 frame_time_ms_int( frame_time_ms );
 
 	auto mut frame_time_text= "   0.0ms";
