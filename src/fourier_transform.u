@@ -78,9 +78,13 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	var u32 size= 1u << size_log2;
 	var u32 area= size * size;
 
+
 	assert( freqs.size() == size_type(area) );
 	assert( intermediate_buffer.size() == size_type(area) );
 	assert( out.size() == size_type(area) );
+
+	scoped_array u32 mut src_indices[ size_type( size ) ]( 0u );
+	PrecalculateCenteredFFTIndicesPermutation( size_type( size_log2 ), src_indices );
 
 	// Perform per-row inverse discrete Fourier transform.
 	for( auto mut y= 0u; y < size; ++y )
@@ -90,6 +94,7 @@ fn PerformFast2DInverseCenteredFourierTransform(
 		PerformFastInverseCenteredFourierTransform(
 			size_type(size_log2),
 			freqs.subrange( start_index, end_index ),
+			src_indices,
 			intermediate_buffer.subrange( start_index, end_index ) );
 	}
 
@@ -105,7 +110,7 @@ fn PerformFast2DInverseCenteredFourierTransform(
 			temp_line[ size_type(y) ]= intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ];
 		}
 
-		PerformFastInverseCenteredFourierTransform( size_type(size_log2), temp_line, temp_line2 );
+		PerformFastInverseCenteredFourierTransform( size_type(size_log2), temp_line, src_indices, temp_line2 );
 
 		for( auto mut y= 0u; y < size; ++y )
 		{
@@ -114,18 +119,12 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	}
 }
 
-fn PerformFastInverseCenteredFourierTransform(
-	size_type size_log2,
-	ust::array_view_imut</Complexf/> in,
-	ust::array_view_mut</Complexf/> out )
+fn PrecalculateCenteredFFTIndicesPermutation( size_type size_log2, ust::array_view_mut</u32/> out )
 {
-	assert( in.size() > 0s );
-	assert( in.size() == ( 1s << size_log2 ) );
-	assert( in.size() == out.size() );
+	var size_type size= 1s << size_log2;
+	var size_type half_size= size >> 1s;
 
-	var size_type half_size= in.size() >> 1s;
-
-	for( auto mut i= 0s; i < in.size(); ++i )
+	for( auto mut i= 0s; i < size; ++i )
 	{
 		// Change bits order in the index.
 		auto mut src_index= 0s;
@@ -146,7 +145,24 @@ fn PerformFastInverseCenteredFourierTransform(
 			src_index-= half_size;
 		}
 
-		out[i]= in[src_index];
+		out[i]= u32(src_index);
+	}
+}
+
+fn PerformFastInverseCenteredFourierTransform(
+	size_type size_log2,
+	ust::array_view_imut</Complexf/> in,
+	ust::array_view_imut</u32/> src_indices,
+	ust::array_view_mut</Complexf/> out )
+{
+	assert( in.size() > 0s );
+	assert( in.size() == ( 1s << size_log2 ) );
+	assert( in.size() == out.size() );
+	assert( in.size() == src_indices.size() );
+
+	for( auto mut i= 0s; i < in.size(); ++i )
+	{
+		out[i]= in[ size_type(src_indices[i]) ];
 	}
 
 	for( var size_type mut s= 0s; s < size_log2; ++s )
