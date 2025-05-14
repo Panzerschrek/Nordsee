@@ -3,6 +3,8 @@ import "/vector.u"
 namespace NS
 {
 
+// A class used for measurements of durations of various code parts.
+// It performs windows-based averaging.
 class PerformanceCounter
 {
 public:
@@ -14,9 +16,9 @@ public:
 	fn AddMeasurement( mut this, TimePoint start_time, TimePoint end_time );
 
 	fn GetCurrentTime( this ) : TimePoint;
-	fn CalculateDiffS( this, TimePoint start_time, TimePoint end_time ) : f32;
+	fn CalculateDurationS( this, TimePoint start_time, TimePoint end_time ) : f32;
 
-	fn GetAverageTimeS( this ) : f32;
+	fn GetAverageDurationS( this ) : f32;
 
 private:
 	size_type imut window_size_;
