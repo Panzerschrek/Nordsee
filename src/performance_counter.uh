@@ -15,6 +15,17 @@ public:
 
 	fn AddMeasurement( mut this, TimePoint start_time, TimePoint end_time );
 
+	template</type Func/>
+	fn RunWithMeasurement( mut this, Func mut func )
+	{
+		auto start_time= GetCurrentTime();
+
+		move(func)();
+
+		auto end_time= GetCurrentTime();
+		AddMeasurement( start_time, end_time );
+	}
+
 	fn GetCurrentTime( this ) : TimePoint;
 	fn CalculateDurationS( this, TimePoint start_time, TimePoint end_time ) : f32;
 

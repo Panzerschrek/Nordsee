@@ -112,14 +112,11 @@ fn Main() : i32
 
 		camera_controller.Update( time_delta_s, keyboard_state );
 
-		{
-			auto start_time= performance_counters.total_heightmap_generation.GetCurrentTime();
-
-			waves_heightmap_processor.Update( time_delta_s );
-
-			auto end_time= performance_counters.total_heightmap_generation.GetCurrentTime();
-			performance_counters.total_heightmap_generation.AddMeasurement( start_time, end_time );
-		}
+		performance_counters.total_heightmap_generation.RunWithMeasurement(
+			lambda[&]()
+			{
+				waves_heightmap_processor.Update( time_delta_s );
+			} );
 
 		var SDL_Surface& surface= unsafe( $>(surface_ptr) );
 
@@ -142,19 +139,16 @@ fn Main() : i32
 				size_type( pitch * u32(surface.h) ) ) ),
 		};
 
-		{
-			auto start_time= performance_counters.heightmap_rendering.GetCurrentTime();
-
-			DrawHeightmap(
+		performance_counters.heightmap_rendering.RunWithMeasurement(
+			lambda[&]()
+			{
+				DrawHeightmap(
 				waves_heightmap_processor.GetHeightmapSizeLog2(),
 				waves_heightmap_processor.GetHeightmapData(),
 				waves_heightmap_processor.GetColorData(),
 				camera_controller,
 				drawable_surface );
-
-			auto end_time= performance_counters.heightmap_rendering.GetCurrentTime();
-			performance_counters.heightmap_rendering.AddMeasurement( start_time, end_time );
-		}
+			} );
 
 		DebugDrawSpectrum(
 			waves_heightmap_processor.GetHeightmapSizeLog2(),
