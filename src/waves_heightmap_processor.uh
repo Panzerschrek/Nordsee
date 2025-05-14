@@ -1,6 +1,7 @@
 import "/vector.u"
 import "color.uh"
 import "complex.uh"
+import "performance_counters.uh"
 
 namespace NS
 {
@@ -15,7 +16,10 @@ public:
 	fn GetColorData( this ) : ust::array_view_imut</Color32/> @( return_inner_references );
 	fn GetCurrentSpectrum( this ) : ust::array_view_imut</Complexf/> @( return_inner_references );
 
-	fn Update( mut this, f32 time_delta_s );
+	fn Update(
+		mut this,
+		f32 time_delta_s,
+		WavesHeightmapProcessorPerformanceCounters &mut performance_counters );
 
 private:
 	auto return_inner_references= ust::reference_notation::return_inner_references::param0;

@@ -1,0 +1,21 @@
+import "performance_counter.uh"
+
+namespace NS
+{
+
+// Performance counters for all metrics measured in the program.
+struct PerformanceCounters
+{
+	PerformanceCounter total_heightmap_generation;
+	PerformanceCounter heightmap_rendering;
+	WavesHeightmapProcessorPerformanceCounters waves_heightmap_processor;
+}
+
+struct WavesHeightmapProcessorPerformanceCounters
+{
+	PerformanceCounter spectrum_in_time_evaluation;
+	PerformanceCounter heightmap_generation;
+	PerformanceCounter colors_generation;
+}
+
+} // namespace NS
