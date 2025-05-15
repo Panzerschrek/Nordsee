@@ -197,7 +197,8 @@ fn InverseCenteredFFT::CalculateComplexMultipliers( size_type size_log2 ) : ust:
 {
 	auto size= 1s << size_log2;
 
-	var ust::vector</Complexf/> mut out( size, Complexf::Zero() );
+	// We require number of values by one less than input size.
+	var ust::vector</Complexf/> mut out( size - 1s, Complexf::Zero() );
 
 	var size_type mut dst= 0s;
 	for( var size_type mut s= 0s; s < size_log2; ++s )
@@ -214,8 +215,7 @@ fn InverseCenteredFFT::CalculateComplexMultipliers( size_type size_log2 ) : ust:
 		}
 	}
 
-	// We require number of values by one less than input size.
-	assert( dst == out.size() - 1s );
+	assert( dst == out.size() );
 
 	return out;
 }
