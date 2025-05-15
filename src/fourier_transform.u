@@ -77,7 +77,6 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	var u32 size= 1u << size_log2;
 	var u32 area= size * size;
 
-
 	assert( freqs.size() == size_type(area) );
 	assert( intermediate_buffer.size() == size_type(area) );
 	assert( out.size() == size_type(area) );
@@ -88,7 +87,9 @@ fn PerformFast2DInverseCenteredFourierTransform(
 		var size_type start_index( y << size_log2 );
 		var size_type end_index= start_index + size_type(size);
 
-		fft.Calculate( freqs.subrange( start_index, end_index ), intermediate_buffer.subrange( start_index, end_index ) );
+		fft.Calculate(
+			freqs.subrange( start_index, end_index ),
+			intermediate_buffer.subrange( start_index, end_index ) );
 	}
 
 	scoped_array Complexf mut temp_line[ size_type(size) ]( Complexf::Zero() );
@@ -107,7 +108,7 @@ fn PerformFast2DInverseCenteredFourierTransform(
 
 		for( auto mut y= 0u; y < size; ++y )
 		{
-			out[ size_type( x | (y << size_log2) ) ] = temp_line2[ size_type(y) ].re;
+			out[ size_type( x | ( y << size_log2 ) ) ] = temp_line2[ size_type(y) ].re;
 		}
 	}
 }
