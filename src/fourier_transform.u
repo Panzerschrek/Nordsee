@@ -68,9 +68,7 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	/*
 		TODO - optimize this:
 
-		* Pre-calculate index bits reversing once, avoid doing this for each row/column.
 		* Combine initial values reordering with the first 1-D FFT algorithm step.
-		* Pre-calculate imaginary exponents once, in order to use them for transformation of each row/column.
 		* For per-row transformation combine column-to-line transformation with indices reversing.
 		* For the last transformation step (in per-column transformation) avoid calculating imaginary part, since only real part is used.
 		* MOST IMPORTANT, do all changes above only if profiling shows that they have positive performance effect.
@@ -117,7 +115,9 @@ fn PerformFast2DInverseCenteredFourierTransform(
 fn InverseCenteredFFT::constructor( size_type size_log2 )
 	(
 		size_log2_= size_log2,
+		// Precalculate indices used for initial values mapping. Doing so makes code slightly faster.
 		src_indices_= CalculateSrcIndices( size_log2 ),
+		// Precalculate complex exponents, which speeds-up calculation significantly.
 		complex_multipliers_= CalculateComplexMultipliers( size_log2 )
 	)
 {}
