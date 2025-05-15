@@ -7,7 +7,8 @@ namespace NS
 fn WavesHeightmapProcessor::constructor( u32 heightmap_size_log2 )
 	(
 		heightmap_size_log2_(heightmap_size_log2),
-		waves_spectrum_= GenerateWavesSpectrum( heightmap_size_log2 )
+		waves_spectrum_= GenerateWavesSpectrum( heightmap_size_log2 ),
+		fft_( size_type( heightmap_size_log2 ) )
 	)
 {
 	var size_type heightmap_area= 1s << ( 2u * heightmap_size_log2 );
@@ -54,7 +55,7 @@ fn WavesHeightmapProcessor::Update(
 	performance_counters.heightmap_generation.RunWithMeasurement(
 		lambda[&t= this]()
 		{
-			GenerateWavesHeightmap( t.heightmap_size_log2_, t.waves_spectrum_time_evaluated_, t.intermediate_buffer_, t.heightmap_data_ );
+			GenerateWavesHeightmap( t.heightmap_size_log2_, t.waves_spectrum_time_evaluated_, t.intermediate_buffer_, t.fft_, t.heightmap_data_ );
 		} );
 
 	performance_counters.colors_generation.RunWithMeasurement(

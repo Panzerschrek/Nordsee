@@ -1,6 +1,5 @@
 import "/assert.u"
 import "/scoped_array.u"
-import "fourier_transform.uh"
 import "gaussian_complex_random.uh"
 import "vec.uh"
 import "waves_heightmap.uh"
@@ -130,6 +129,7 @@ fn GenerateWavesHeightmap(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
+	InverseCenteredFFT& fft,
 	ust::array_view_mut</f32/> out )
 {
 	var u32 heightmap_size= 1u << heightmap_size_log2;
@@ -140,7 +140,7 @@ fn GenerateWavesHeightmap(
 	assert( freqs.size() == intermediate_buffer.size() );
 	assert( freqs.size() == size_type( heightmap_area ) );
 
-	PerformFast2DInverseCenteredFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, out );
+	PerformFast2DInverseCenteredFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, fft, out );
 }
 
 fn GenerateWavesColors(

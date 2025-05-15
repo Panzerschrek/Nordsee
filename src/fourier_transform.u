@@ -62,6 +62,7 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
+	InverseCenteredFFT& fft,
 	ust::array_view_mut</f32/> out )
 {
 	/*
@@ -83,24 +84,13 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	assert( intermediate_buffer.size() == size_type(area) );
 	assert( out.size() == size_type(area) );
 
-	scoped_array u32 mut src_indices[ size_type( size ) ]( 0u );
-	PrecalculateCenteredFFTIndicesPermutation( size_type( size_log2 ), src_indices );
-
-	scoped_array Complexf mut complex_multipliers[ size_type(size) ]( Complexf::Zero() );
-	PrecalculateCenteredFFTComplexMultipliers( size_type(size_log2), complex_multipliers );
-
 	// Perform per-row inverse discrete Fourier transform.
 	for( auto mut y= 0u; y < size; ++y )
 	{
 		var size_type start_index( y << size_log2 );
 		var size_type end_index= start_index + size_type(size);
 
-		PerformFastInverseCenteredFourierTransform(
-			size_type(size_log2),
-			freqs.subrange( start_index, end_index ),
-			src_indices,
-			complex_multipliers,
-			intermediate_buffer.subrange( start_index, end_index ) );
+		fft.Calculate( freqs.subrange( start_index, end_index ), intermediate_buffer.subrange( start_index, end_index ) );
 	}
 
 	scoped_array Complexf mut temp_line[ size_type(size) ]( Complexf::Zero() );
@@ -115,12 +105,7 @@ fn PerformFast2DInverseCenteredFourierTransform(
 			temp_line[ size_type(y) ]= intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ];
 		}
 
-		PerformFastInverseCenteredFourierTransform(
-			size_type(size_log2),
-			temp_line,
-			src_indices,
-			complex_multipliers,
-			temp_line2 );
+		fft.Calculate( temp_line, temp_line2 );
 
 		for( auto mut y= 0u; y < size; ++y )
 		{
@@ -129,10 +114,57 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	}
 }
 
-fn PrecalculateCenteredFFTIndicesPermutation( size_type size_log2, ust::array_view_mut</u32/> out )
+fn InverseCenteredFFT::constructor( size_type size_log2 )
+	(
+		size_log2_= size_log2,
+		src_indices_= CalculateSrcIndices( size_log2 ),
+		complex_multipliers_= CalculateComplexMultipliers( size_log2 )
+	)
+{}
+
+fn InverseCenteredFFT::Calculate( this, ust::array_view_imut</Complexf/> in, ust::array_view_mut</Complexf/> out )
+{
+	assert( in.size() > 0s );
+	assert( in.size() == ( 1s << size_log2_ ) );
+	assert( in.size() == out.size() );
+	assert( in.size() == src_indices_.size() );
+
+	for( auto mut i= 0s; i < in.size(); ++i )
+	{
+		out[i]= in[ size_type(src_indices_[i]) ];
+	}
+
+	var size_type mut omega_index= 0s;
+	for( var size_type mut s= 0s; s < size_log2_; ++s )
+	{
+		var size_type half_m= 1s << s;
+		var size_type m= 1s << ( s + 1s );
+
+		for( var size_type mut j= 0s; j < half_m; ++j )
+		{
+			var Complexf& omega= complex_multipliers_[omega_index];
+			++omega_index;
+			for( var size_type mut k= 0s; k < in.size(); k+= m )
+			{
+				var size_type index0= j + k;
+				var size_type index1= j + k + half_m;
+
+				auto val0= out[index0];
+				auto val1= out[index1] * omega;
+
+				out[index0]= val0 + val1;
+				out[index1]= val0 - val1;
+			}
+		}
+	}
+}
+
+fn InverseCenteredFFT::CalculateSrcIndices( size_type size_log2 ) : ust::vector</u32/>
 {
 	var size_type size= 1s << size_log2;
 	var size_type half_size= size >> 1s;
+
+	var ust::vector</u32/> mut out( size, 0u );
 
 	for( auto mut i= 0s; i < size; ++i )
 	{
@@ -157,11 +189,15 @@ fn PrecalculateCenteredFFTIndicesPermutation( size_type size_log2, ust::array_vi
 
 		out[i]= u32(src_index);
 	}
+
+	return out;
 }
 
-fn PrecalculateCenteredFFTComplexMultipliers( size_type size_log2, ust::array_view_mut</Complexf/> out )
+fn InverseCenteredFFT::CalculateComplexMultipliers( size_type size_log2 ) : ust::vector</Complexf/>
 {
-	assert( out.size() == ( 1s << size_log2 ) );
+	auto size= 1s << size_log2;
+
+	var ust::vector</Complexf/> mut out( size, Complexf::Zero() );
 
 	var size_type mut dst= 0s;
 	for( var size_type mut s= 0s; s < size_log2; ++s )
@@ -180,48 +216,8 @@ fn PrecalculateCenteredFFTComplexMultipliers( size_type size_log2, ust::array_vi
 
 	// We require number of values by one less than input size.
 	assert( dst == out.size() - 1s );
-}
 
-fn PerformFastInverseCenteredFourierTransform(
-	size_type size_log2,
-	ust::array_view_imut</Complexf/> in,
-	ust::array_view_imut</u32/> src_indices,
-	ust::array_view_imut</Complexf/> complex_multipliers,
-	ust::array_view_mut</Complexf/> out )
-{
-	assert( in.size() > 0s );
-	assert( in.size() == ( 1s << size_log2 ) );
-	assert( in.size() == out.size() );
-	assert( in.size() == src_indices.size() );
-
-	for( auto mut i= 0s; i < in.size(); ++i )
-	{
-		out[i]= in[ size_type(src_indices[i]) ];
-	}
-
-	var size_type mut omega_index= 0s;
-	for( var size_type mut s= 0s; s < size_log2; ++s )
-	{
-		var size_type half_m= 1s << s;
-		var size_type m= 1s << ( s + 1s );
-
-		for( var size_type mut j= 0s; j < half_m; ++j )
-		{
-			var Complexf& omega= complex_multipliers[omega_index];
-			++omega_index;
-			for( var size_type mut k= 0s; k < in.size(); k+= m )
-			{
-				var size_type index0= j + k;
-				var size_type index1= j + k + half_m;
-
-				auto val0= out[index0];
-				auto val1= out[index1] * omega;
-
-				out[index0]= val0 + val1;
-				out[index1]= val0 - val1;
-			}
-		}
-	}
+	return out;
 }
 
 } // namespace NS

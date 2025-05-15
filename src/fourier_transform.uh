@@ -1,4 +1,5 @@
 import "/random_access_range.u"
+import "/vector.u"
 import "complex.uh"
 
 namespace NS
@@ -23,6 +24,24 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
+	InverseCenteredFFT& fft,
 	ust::array_view_mut</f32/> out );
+
+class InverseCenteredFFT
+{
+public:
+	fn constructor( size_type size_log2 );
+
+	fn Calculate( this, ust::array_view_imut</Complexf/> in, ust::array_view_mut</Complexf/> out );
+
+private:
+	fn CalculateSrcIndices( size_type size_log2 ) : ust::vector</u32/>;
+	fn CalculateComplexMultipliers( size_type size_log2 ) : ust::vector</Complexf/>;
+
+private:
+	size_type imut size_log2_;
+	ust::vector</u32/> imut src_indices_;
+	ust::vector</Complexf/> imut complex_multipliers_;
+}
 
 } // namespace NS
