@@ -92,23 +92,31 @@ fn PerformFast2DInverseCenteredFourierTransform(
 			intermediate_buffer.subrange( start_index, end_index ) );
 	}
 
-	scoped_array Complexf mut temp_line[ size_type(size) ]( Complexf::Zero() );
+	scoped_array Complexf mut temp_line0[ size_type(size) ]( Complexf::Zero() );
+	scoped_array Complexf mut temp_line1[ size_type(size) ]( Complexf::Zero() );
+
 	scoped_array Complexf mut temp_line2[ size_type(size) ]( Complexf::Zero() );
+	scoped_array Complexf mut temp_line3[ size_type(size) ]( Complexf::Zero() );
 
 	// Perform per-column inverse discrete Fourier transform.
-	// TODO - optimize this - avoid using second intermediate buffer.
-	for( auto mut x= 0u; x < size; ++x )
+	// Do this in pair of columns to improve cache-locality.
+	for( auto mut x= 0u; x < size; x+= 2u )
 	{
 		for( auto mut y= 0u; y < size; ++y )
 		{
-			temp_line[ size_type(y) ]= intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ];
+			auto src= x | ( y << size_log2 );
+			temp_line0[ size_type(y) ]= intermediate_buffer[ size_type( src ) ];
+			temp_line2[ size_type(y) ]= intermediate_buffer[ size_type( 1u | src ) ];
 		}
 
-		fft.Calculate( temp_line, temp_line2 );
+		fft.Calculate( temp_line0, temp_line1 );
+		fft.Calculate( temp_line2, temp_line3 );
 
 		for( auto mut y= 0u; y < size; ++y )
 		{
-			out[ size_type( x | ( y << size_log2 ) ) ] = temp_line2[ size_type(y) ].re;
+			auto dst= x | ( y << size_log2 );
+			out[ size_type( dst ) ] = temp_line1[ size_type(y) ].re;
+			out[ size_type( 1u | dst ) ] = temp_line3[ size_type(y) ].re;
 		}
 	}
 }
