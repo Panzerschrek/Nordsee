@@ -1,6 +1,7 @@
 import "/vector.u"
 import "color.uh"
 import "complex.uh"
+import "fourier_transform.uh"
 
 namespace NS
 {
@@ -18,6 +19,7 @@ fn GenerateWavesHeightmap(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
+	InverseCenteredFFT& fft,
 	ust::array_view_mut</f32/> out );
 
 fn GenerateWavesColors(

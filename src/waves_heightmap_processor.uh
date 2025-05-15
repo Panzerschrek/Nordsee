@@ -1,6 +1,7 @@
 import "/vector.u"
 import "color.uh"
 import "complex.uh"
+import "fourier_transform.uh"
 import "performance_counters.uh"
 
 namespace NS
@@ -27,6 +28,8 @@ private:
 private:
 	u32 imut heightmap_size_log2_;
 	ust::vector</Complexf/> imut waves_spectrum_;
+
+	InverseCenteredFFT imut fft_;
 
 	f32 accumulated_time_s_= 0.0f;
 	ust::vector</Complexf/> waves_spectrum_time_evaluated_;

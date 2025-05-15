@@ -62,14 +62,13 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	u32 size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
+	InverseCenteredFFT& fft,
 	ust::array_view_mut</f32/> out )
 {
 	/*
 		TODO - optimize this:
 
-		* Pre-calculate index bits reversing once, avoid doing this for each row/column.
 		* Combine initial values reordering with the first 1-D FFT algorithm step.
-		* Pre-calculate imaginary exponents once, in order to use them for transformation of each row/column.
 		* For per-row transformation combine column-to-line transformation with indices reversing.
 		* For the last transformation step (in per-column transformation) avoid calculating imaginary part, since only real part is used.
 		* MOST IMPORTANT, do all changes above only if profiling shows that they have positive performance effect.
@@ -87,45 +86,96 @@ fn PerformFast2DInverseCenteredFourierTransform(
 	{
 		var size_type start_index( y << size_log2 );
 		var size_type end_index= start_index + size_type(size);
-		PerformFastInverseCenteredFourierTransform(
-			size_type(size_log2),
+
+		fft.Calculate(
 			freqs.subrange( start_index, end_index ),
 			intermediate_buffer.subrange( start_index, end_index ) );
 	}
 
-	scoped_array Complexf mut temp_line[ size_type(size) ]( Complexf::Zero() );
+	scoped_array Complexf mut temp_line0[ size_type(size) ]( Complexf::Zero() );
+	scoped_array Complexf mut temp_line1[ size_type(size) ]( Complexf::Zero() );
+
 	scoped_array Complexf mut temp_line2[ size_type(size) ]( Complexf::Zero() );
+	scoped_array Complexf mut temp_line3[ size_type(size) ]( Complexf::Zero() );
 
 	// Perform per-column inverse discrete Fourier transform.
-	// TODO - optimize this - avoid using second intermediate buffer.
-	for( auto mut x= 0u; x < size; ++x )
+	// Do this in pair of columns to improve cache-locality.
+	for( auto mut x= 0u; x < size; x+= 2u )
 	{
 		for( auto mut y= 0u; y < size; ++y )
 		{
-			temp_line[ size_type(y) ]= intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ];
+			auto src= x | ( y << size_log2 );
+			temp_line0[ size_type(y) ]= intermediate_buffer[ size_type( src ) ];
+			temp_line2[ size_type(y) ]= intermediate_buffer[ size_type( 1u | src ) ];
 		}
 
-		PerformFastInverseCenteredFourierTransform( size_type(size_log2), temp_line, temp_line2 );
+		fft.Calculate( temp_line0, temp_line1 );
+		fft.Calculate( temp_line2, temp_line3 );
 
 		for( auto mut y= 0u; y < size; ++y )
 		{
-			out[ size_type( x | (y << size_log2) ) ] = temp_line2[ size_type(y) ].re;
+			auto dst= x | ( y << size_log2 );
+			out[ size_type( dst ) ] = temp_line1[ size_type(y) ].re;
+			out[ size_type( 1u | dst ) ] = temp_line3[ size_type(y) ].re;
 		}
 	}
 }
 
-fn PerformFastInverseCenteredFourierTransform(
-	size_type size_log2,
-	ust::array_view_imut</Complexf/> in,
-	ust::array_view_mut</Complexf/> out )
+fn InverseCenteredFFT::constructor( size_type size_log2 )
+	(
+		size_log2_= size_log2,
+		// Precalculate indices used for initial values mapping. Doing so makes code slightly faster.
+		src_indices_= CalculateSrcIndices( size_log2 ),
+		// Precalculate complex exponents, which speeds-up calculation significantly.
+		complex_multipliers_= CalculateComplexMultipliers( size_log2 )
+	)
+{}
+
+fn InverseCenteredFFT::Calculate( this, ust::array_view_imut</Complexf/> in, ust::array_view_mut</Complexf/> out )
 {
 	assert( in.size() > 0s );
-	assert( in.size() == ( 1s << size_log2 ) );
+	assert( in.size() == ( 1s << size_log2_ ) );
 	assert( in.size() == out.size() );
-
-	var size_type half_size= in.size() >> 1s;
+	assert( in.size() == src_indices_.size() );
 
 	for( auto mut i= 0s; i < in.size(); ++i )
+	{
+		out[i]= in[ size_type(src_indices_[i]) ];
+	}
+
+	var size_type mut omega_index= 0s;
+	for( var size_type mut s= 0s; s < size_log2_; ++s )
+	{
+		var size_type half_m= 1s << s;
+		var size_type m= 1s << ( s + 1s );
+
+		for( var size_type mut j= 0s; j < half_m; ++j )
+		{
+			var Complexf& omega= complex_multipliers_[omega_index];
+			++omega_index;
+			for( var size_type mut k= 0s; k < in.size(); k+= m )
+			{
+				var size_type index0= j + k;
+				var size_type index1= j + k + half_m;
+
+				auto val0= out[index0];
+				auto val1= out[index1] * omega;
+
+				out[index0]= val0 + val1;
+				out[index1]= val0 - val1;
+			}
+		}
+	}
+}
+
+fn InverseCenteredFFT::CalculateSrcIndices( size_type size_log2 ) : ust::vector</u32/>
+{
+	var size_type size= 1s << size_log2;
+	var size_type half_size= size >> 1s;
+
+	var ust::vector</u32/> mut out( size, 0u );
+
+	for( auto mut i= 0s; i < size; ++i )
 	{
 		// Change bits order in the index.
 		auto mut src_index= 0s;
@@ -146,9 +196,20 @@ fn PerformFastInverseCenteredFourierTransform(
 			src_index-= half_size;
 		}
 
-		out[i]= in[src_index];
+		out[i]= u32(src_index);
 	}
 
+	return out;
+}
+
+fn InverseCenteredFFT::CalculateComplexMultipliers( size_type size_log2 ) : ust::vector</Complexf/>
+{
+	auto size= 1s << size_log2;
+
+	// We require number of values by one less than input size.
+	var ust::vector</Complexf/> mut out( size - 1s, Complexf::Zero() );
+
+	var size_type mut dst= 0s;
 	for( var size_type mut s= 0s; s < size_log2; ++s )
 	{
 		var size_type half_m= 1s << s;
@@ -158,20 +219,14 @@ fn PerformFastInverseCenteredFourierTransform(
 
 		for( var size_type mut j= 0s; j < half_m; ++j )
 		{
-			var Complexf omega= Complexf::ImaginaryExponent( f32(j) * scale );
-			for( var size_type mut k= 0s; k < in.size(); k+= m )
-			{
-				var size_type index0= j + k;
-				var size_type index1= j + k + half_m;
-
-				auto val0= out[index0];
-				auto val1= out[index1] * omega;
-
-				out[index0]= val0 + val1;
-				out[index1]= val0 - val1;
-			}
+			out[dst]= Complexf::ImaginaryExponent( f32(j) * scale );
+			++dst;
 		}
 	}
+
+	assert( dst == out.size() );
+
+	return out;
 }
 
 } // namespace NS
