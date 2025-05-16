@@ -79,8 +79,11 @@ fn WavesHeightmapProcessor::Update(
 			GenerateWavesHeightmap( t.heightmap_size_log2_, t.side_shift_spectrum_y_, t.intermediate_buffer_, t.fft_, t.side_shift_data_y_ );
 		} );
 
-
-	GenerateShiftedHeightmap( heightmap_size_log2_, vertical_shift_, side_shift_data_x_, side_shift_data_y_, heightmap_data_ );
+	performance_counters.heightmap_side_shifting.RunWithMeasurement(
+		lambda[&t=this]()
+		{
+			GenerateShiftedHeightmap( t.heightmap_size_log2_, t.vertical_shift_, t.side_shift_data_x_, t.side_shift_data_y_, t.heightmap_data_ );
+		} );
 
 	performance_counters.colors_generation.RunWithMeasurement(
 		lambda[&t= this]()
