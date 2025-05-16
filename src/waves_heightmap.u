@@ -203,6 +203,12 @@ fn GenerateShiftedHeightmap(
 	assert( vertical_shift.size() == out.size() );
 	assert( vertical_shift.size() == size_type( heightmap_area ) );
 
+	type HeightWithYShift= [ f32, 2 ];
+
+	var HeightWithYShift zero_heigth_and_shift= zero_init;
+	scoped_array HeightWithYShift mut x_shifted_heitgtmap[ size_type(heightmap_area) ]( zero_heigth_and_shift );
+
+	// Perform X shift.
 	for( auto mut y= 0u; y < heightmap_size; ++y )
 	{
 		var size_type start_address( y << heightmap_size_log2 );
@@ -210,14 +216,17 @@ fn GenerateShiftedHeightmap(
 
 		auto src_line_vectical= vertical_shift.subrange( start_address, end_address );
 		auto src_line_x= shift_x.subrange( start_address, end_address );
-		auto dst_line= out.subrange( start_address, end_address );
+		auto src_line_y= shift_y.subrange( start_address, end_address );
+		auto dst_line= x_shifted_heitgtmap.subrange( start_address, end_address );
 
 		for( auto mut x= 0u; x < heightmap_size; ++x )
 		{
 			var size_type x0( (x - 1u) & heightmap_size_mask );
 			var size_type x1( x );
-			var f32 src_height0= src_line_vectical[ size_type( x0 ) ];
-			var f32 src_height1= src_line_vectical[ size_type( x1 ) ];
+			var f32 src_height0= src_line_vectical[ x0 ];
+			var f32 src_height1= src_line_vectical[ x1 ];
+			var f32 offset_y0= src_line_y[ x0 ];
+			var f32 offset_y1= src_line_y[ x1 ];
 
 			var f32 offset_x0= src_line_x[ x0 ];
 			var f32 offset_x1= src_line_x[ x1 ];
@@ -232,7 +241,41 @@ fn GenerateShiftedHeightmap(
 			{
 				var f32 ratio= ( f32(dst_x) + 0.5f - x_start ) / ( x_end - x_start );
 				var f32 inv_ratio= 1.0f - ratio;
-				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= src_height0 * inv_ratio + src_height1 * ratio;
+				var f32 height= src_height0 * inv_ratio + src_height1 * ratio;
+				var f32 y_shift= offset_y0 * inv_ratio + offset_y1 * ratio;
+				var HeightWithYShift height_with_y_shift[ height, y_shift ];
+				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= height_with_y_shift;
+			}
+		}
+	}
+
+	// Perform Y shift.
+	for( auto mut y= 0u; y < heightmap_size; ++y )
+	{
+		for( auto mut x= 0u; x < heightmap_size; ++x )
+		{
+			var u32 y0= (y - 1u) & heightmap_size_mask;
+			var u32 y1= y;
+			var size_type address0( x | ( y0 << heightmap_size_log2 ) );
+			var size_type address1( x | ( y1 << heightmap_size_log2 ) );
+
+			var f32 src_height0= x_shifted_heitgtmap[ address0 ][0];
+			var f32 src_height1= x_shifted_heitgtmap[ address1 ][0];
+			var f32 offset_y0= x_shifted_heitgtmap[ address0 ][1];
+			var f32 offset_y1= x_shifted_heitgtmap[ address1 ][1];
+
+			var f32 y_start= f32(i32(y) - 1) + 0.5f + offset_y0;
+			var f32 y_end= f32(y) + 0.5f + offset_y1;
+
+			var i32 y_start_int= i32( ust::round(y_start) );
+			var i32 y_end_int= i32( ust::round(y_end) );
+
+			for( var i32 mut dst_y= y_start_int; dst_y < y_end_int; ++dst_y )
+			{
+				var f32 ratio= ( f32(dst_y) + 0.5f - y_start ) / ( y_end - y_start );
+				var f32 inv_ratio= 1.0f - ratio;
+				var f32 height= src_height0 * inv_ratio + src_height1 * ratio;
+				out[ size_type( x | ( u32( dst_y & i32(heightmap_size_mask) ) << heightmap_size_log2 ) ) ]= height;
 			}
 		}
 	}
