@@ -125,6 +125,46 @@ fn EvaluateWavesSpectrumInTime(
 	}
 }
 
+fn GenerateSideShiftSpectra(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</Complexf/> in_freqs,
+	ust::array_view_mut</Complexf/> out_freqs_x,
+	ust::array_view_mut</Complexf/> out_freqs_y )
+{
+	assert( in_freqs.size() == out_freqs_x.size() );
+	assert( in_freqs.size() == out_freqs_y.size() );
+
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+	var u32 half_heightmap_size= heightmap_size >> 1u;
+
+	assert( in_freqs.size() == size_type( heightmap_size * heightmap_size ) );
+
+	for( var u32 mut x= 0u; x < heightmap_size; ++x )
+	{
+		for( var u32 mut y= 0u; y < heightmap_size; ++y )
+		{
+			var size_type address( x | ( y << heightmap_size_log2 ) );
+
+			var f32 wave_number_x= f32(x) - f32(half_heightmap_size);
+			var f32 wave_number_y= f32(y) - f32(half_heightmap_size);
+
+			var f32 squares_sum= wave_number_x * wave_number_x + wave_number_y * wave_number_y;
+			if( squares_sum == 0.0f )
+			{
+				out_freqs_x[address]= Complexf( 0.0f, 0.0f );
+				out_freqs_y[address]= Complexf( 0.0f, 0.0f );
+				continue;
+			}
+
+			var Complexf& in_complex_amplitude= in_freqs[address];
+
+			// TODO - rotate phase, since side motion is 90 degree rotated relative to vertical motion.
+			out_freqs_x[address]= in_complex_amplitude * ( f32(heightmap_size) * wave_number_x / squares_sum );
+			out_freqs_y[address]= in_complex_amplitude * ( f32(heightmap_size) * wave_number_y / squares_sum );
+		}
+	}
+}
+
 fn GenerateWavesHeightmap(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> freqs,

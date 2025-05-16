@@ -14,6 +14,9 @@ fn WavesHeightmapProcessor::constructor( u32 heightmap_size_log2 )
 	var size_type heightmap_area= 1s << ( 2u * heightmap_size_log2 );
 
 	waves_spectrum_time_evaluated_.resize( heightmap_area, Complexf::Zero() );
+	side_shift_spectrum_x_.resize( heightmap_area, Complexf::Zero() );
+	side_shift_spectrum_y_.resize( heightmap_area, Complexf::Zero() );
+
 	intermediate_buffer_.resize( heightmap_area, Complexf::Zero() );
 	heightmap_data_.resize( heightmap_area, 0.0f );
 	color_data_.resize( heightmap_area, 0u );
@@ -50,6 +53,12 @@ fn WavesHeightmapProcessor::Update(
 		lambda[&t= this]()
 		{
 			EvaluateWavesSpectrumInTime( t.heightmap_size_log2_, t.waves_spectrum_, t.waves_spectrum_time_evaluated_, t.accumulated_time_s_ );
+		} );
+
+	performance_counters.side_shift_spectrum_calculation.RunWithMeasurement(
+		lambda[&t= this]()
+		{
+			GenerateSideShiftSpectra( t.heightmap_size_log2_, t.waves_spectrum_time_evaluated_, t.side_shift_spectrum_x_, t.side_shift_spectrum_y_ );
 		} );
 
 	performance_counters.heightmap_generation.RunWithMeasurement(

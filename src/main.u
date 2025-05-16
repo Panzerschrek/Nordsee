@@ -346,13 +346,19 @@ fn DrawPerformanceCounters(
 		};
 
 	auto row_step= 18;
-	auto num_rows= 5;
+	auto num_rows= 6;
 	auto mut y_offset= i32(surface.h) - num_rows * row_step;
 	auto mut row= 0;
 
 	{
 		auto mut text= "Spectrum in time evaluation:    0.0 ms";
 		stringify_value_as_milliseconds( counters.waves_heightmap_processor.spectrum_in_time_evaluation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Side shift spectrum calculation:    0.0 ms";
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.side_shift_spectrum_calculation.GetAverageDurationS(), text );
 		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
 		++row;
 	}

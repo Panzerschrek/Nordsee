@@ -14,6 +14,7 @@ struct PerformanceCounters
 struct WavesHeightmapProcessorPerformanceCounters
 {
 	PerformanceCounter spectrum_in_time_evaluation;
+	PerformanceCounter side_shift_spectrum_calculation;
 	PerformanceCounter heightmap_generation;
 	PerformanceCounter colors_generation;
 }
