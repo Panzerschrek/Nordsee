@@ -139,6 +139,8 @@ fn GenerateSideShiftSpectra(
 
 	assert( in_freqs.size() == size_type( heightmap_size * heightmap_size ) );
 
+	var Complexf rotation( 0.0f, 1.0f );
+
 	for( var u32 mut x= 0u; x < heightmap_size; ++x )
 	{
 		for( var u32 mut y= 0u; y < heightmap_size; ++y )
@@ -159,8 +161,8 @@ fn GenerateSideShiftSpectra(
 			var Complexf& in_complex_amplitude= in_freqs[address];
 
 			// TODO - rotate phase, since side motion is 90 degree rotated relative to vertical motion.
-			out_freqs_x[address]= in_complex_amplitude * ( f32(heightmap_size) * wave_number_x / squares_sum );
-			out_freqs_y[address]= in_complex_amplitude * ( f32(heightmap_size) * wave_number_y / squares_sum );
+			out_freqs_x[address]= (rotation * in_complex_amplitude) * ( wave_number_x / squares_sum );
+			out_freqs_y[address]= (rotation * in_complex_amplitude) * ( wave_number_y / squares_sum );
 		}
 	}
 }
@@ -191,6 +193,7 @@ fn GenerateShiftedHeightmap(
 	ust::array_view_mut</f32/> out )
 {
 	var u32 heightmap_size= 1u << heightmap_size_log2;
+	var u32 heightmap_size_mask= heightmap_size - 1u;
 
 	var u32 heightmap_area= heightmap_size * heightmap_size;
 
@@ -201,12 +204,33 @@ fn GenerateShiftedHeightmap(
 
 	for( auto mut y= 0u; y < heightmap_size; ++y )
 	{
+		var size_type start_address( y << heightmap_size_log2 );
+		var size_type end_address( ( y + 1u ) << heightmap_size_log2 );
+
+		auto src_line_vectical= vertical_shift.subrange( start_address, end_address );
+		auto src_line_x= shift_x.subrange( start_address, end_address );
+		auto dst_line= out.subrange( start_address, end_address );
+
 		for( auto mut x= 0u; x < heightmap_size; ++x )
 		{
-			var size_type src_address( x | ( y << heightmap_size_log2 ) );
+			var size_type x0( (x - 1u) & heightmap_size_mask );
+			var size_type x1( x );
+			var f32 src_height0= src_line_vectical[ size_type( x0 ) ];
+			var f32 src_height1= src_line_vectical[ size_type( x1 ) ];
 
-			// TODO - perform real shift.
-			out[ src_address ]= vertical_shift[ src_address ];
+			var f32 offset_x0= src_line_x[ x0 ];
+			var f32 offset_x1= src_line_x[ x1 ];
+
+			var f32 x_start= f32(i32(x) - 1) + offset_x0;
+			var f32 x_end= f32(x) + offset_x1;
+
+			var i32 x_start_int= i32( ust::floor(x_start) );
+			var i32 x_end_int= i32( ust::floor(x_end) );
+
+			for( auto mut dst_x= x_start_int; dst_x < x_end_int; ++dst_x )
+			{
+				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= ( src_height0 + src_height1 ) * 0.5f;
+			}
 		}
 	}
 }
