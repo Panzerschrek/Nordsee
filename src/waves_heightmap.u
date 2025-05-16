@@ -139,8 +139,6 @@ fn GenerateSideShiftSpectra(
 
 	assert( in_freqs.size() == size_type( heightmap_size * heightmap_size ) );
 
-	var Complexf rotation( 0.0f, 1.0f );
-
 	for( var u32 mut x= 0u; x < heightmap_size; ++x )
 	{
 		for( var u32 mut y= 0u; y < heightmap_size; ++y )
@@ -159,10 +157,11 @@ fn GenerateSideShiftSpectra(
 			}
 
 			var Complexf& in_complex_amplitude= in_freqs[address];
+			// Side shift is 90 degree rotated compared to vertical shift.
+			var Complexf complex_amplitude_rotated( -in_complex_amplitude.im, in_complex_amplitude.re );
 
-			// TODO - rotate phase, since side motion is 90 degree rotated relative to vertical motion.
-			out_freqs_x[address]= (rotation * in_complex_amplitude) * ( wave_number_x / squares_sum );
-			out_freqs_y[address]= (rotation * in_complex_amplitude) * ( wave_number_y / squares_sum );
+			out_freqs_x[address]= complex_amplitude_rotated * ( wave_number_x / squares_sum );
+			out_freqs_y[address]= complex_amplitude_rotated * ( wave_number_y / squares_sum );
 		}
 	}
 }
