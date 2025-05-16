@@ -183,6 +183,34 @@ fn GenerateWavesHeightmap(
 	PerformFast2DInverseCenteredFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, fft, out );
 }
 
+fn GenerateShiftedHeightmap(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> vertical_shift,
+	ust::array_view_imut</f32/> shift_x,
+	ust::array_view_imut</f32/> shift_y,
+	ust::array_view_mut</f32/> out )
+{
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+
+	var u32 heightmap_area= heightmap_size * heightmap_size;
+
+	assert( vertical_shift.size() == shift_x.size() );
+	assert( vertical_shift.size() == shift_y.size() );
+	assert( vertical_shift.size() == out.size() );
+	assert( vertical_shift.size() == size_type( heightmap_area ) );
+
+	for( auto mut y= 0u; y < heightmap_size; ++y )
+	{
+		for( auto mut x= 0u; x < heightmap_size; ++x )
+		{
+			var size_type src_address( x | ( y << heightmap_size_log2 ) );
+
+			// TODO - perform real shift.
+			out[ src_address ]= vertical_shift[ src_address ];
+		}
+	}
+}
+
 fn GenerateWavesColors(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</f32/> heightmap_data,

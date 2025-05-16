@@ -39,9 +39,10 @@ private:
 
 	ust::vector</Complexf/> intermediate_buffer_;
 
-	ust::vector</f32/> heightmap_data_;
+	ust::vector</f32/> vertical_shift_;
 	ust::vector</f32/> side_shift_data_x_;
 	ust::vector</f32/> side_shift_data_y_;
+	ust::vector</f32/> heightmap_data_;
 
 	ust::vector</Color32/> color_data_;
 }
