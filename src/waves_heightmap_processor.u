@@ -1,5 +1,4 @@
 import "waves_heightmap_processor.uh"
-import "waves_heightmap.uh"
 
 namespace NS
 {
@@ -18,6 +17,7 @@ fn WavesHeightmapProcessor::constructor( u32 heightmap_size_log2 )
 	side_shift_spectrum_y_.resize( heightmap_area, Complexf::Zero() );
 
 	intermediate_buffer_.resize( heightmap_area, Complexf::Zero() );
+	temp_x_shifted_heightmap_.resize( heightmap_area, ust::make_array( 0.0f, 0.0f ) );
 
 	vertical_shift_.resize( heightmap_area, 0.0f );
 	side_shift_data_x_.resize( heightmap_area, 0.0f );
@@ -82,7 +82,7 @@ fn WavesHeightmapProcessor::Update(
 	performance_counters.heightmap_side_shifting.RunWithMeasurement(
 		lambda[&t=this]()
 		{
-			GenerateShiftedHeightmap( t.heightmap_size_log2_, t.vertical_shift_, t.side_shift_data_x_, t.side_shift_data_y_, t.heightmap_data_ );
+			GenerateShiftedHeightmap( t.heightmap_size_log2_, t.vertical_shift_, t.side_shift_data_x_, t.side_shift_data_y_, t.temp_x_shifted_heightmap_, t.heightmap_data_ );
 		} );
 
 	performance_counters.colors_generation.RunWithMeasurement(

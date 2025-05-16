@@ -33,7 +33,10 @@ fn GenerateShiftedHeightmap(
 	ust::array_view_imut</f32/> vertical_shift,
 	ust::array_view_imut</f32/> shift_x,
 	ust::array_view_imut</f32/> shift_y,
+	ust::array_view_mut</HeightWithYShift/> temp_x_shifted_heightmap,
 	ust::array_view_mut</f32/> out );
+
+type HeightWithYShift= [ f32, 2 ];
 
 fn GenerateWavesColors(
 	u32 heightmap_size_log2,

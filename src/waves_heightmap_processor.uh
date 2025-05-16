@@ -3,6 +3,7 @@ import "color.uh"
 import "complex.uh"
 import "fourier_transform.uh"
 import "performance_counters.uh"
+import "waves_heightmap.uh"
 
 namespace NS
 {
@@ -38,6 +39,7 @@ private:
 	ust::vector</Complexf/> side_shift_spectrum_y_;
 
 	ust::vector</Complexf/> intermediate_buffer_;
+	ust::vector</HeightWithYShift/> temp_x_shifted_heightmap_;
 
 	ust::vector</f32/> vertical_shift_;
 	ust::vector</f32/> side_shift_data_x_;
