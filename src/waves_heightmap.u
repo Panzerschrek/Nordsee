@@ -221,15 +221,17 @@ fn GenerateShiftedHeightmap(
 			var f32 offset_x0= src_line_x[ x0 ];
 			var f32 offset_x1= src_line_x[ x1 ];
 
-			var f32 x_start= f32(i32(x) - 1) + offset_x0;
-			var f32 x_end= f32(x) + offset_x1;
+			var f32 x_start= f32(i32(x) - 1) + 0.5f + offset_x0;
+			var f32 x_end= f32(x) + 0.5f + offset_x1;
 
-			var i32 x_start_int= i32( ust::floor(x_start) );
-			var i32 x_end_int= i32( ust::floor(x_end) );
+			var i32 x_start_int= i32( ust::round(x_start) );
+			var i32 x_end_int= i32( ust::round(x_end) );
 
-			for( auto mut dst_x= x_start_int; dst_x < x_end_int; ++dst_x )
+			for( var i32 mut dst_x= x_start_int; dst_x < x_end_int; ++dst_x )
 			{
-				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= ( src_height0 + src_height1 ) * 0.5f;
+				var f32 ratio= ( f32(dst_x) + 0.5f - x_start ) / ( x_end - x_start );
+				var f32 inv_ratio= 1.0f - ratio;
+				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= src_height0 * inv_ratio + src_height1 * ratio;
 			}
 		}
 	}
