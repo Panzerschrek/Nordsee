@@ -139,31 +139,39 @@ fn GenerateSideShiftSpectra(
 
 	assert( in_freqs.size() == size_type( heightmap_size * heightmap_size ) );
 
-	for( var u32 mut x= 0u; x < heightmap_size; ++x )
-	{
-		for( var u32 mut y= 0u; y < heightmap_size; ++y )
-		{
-			var size_type address( x | ( y << heightmap_size_log2 ) );
+	var size_type zero_freq_index( half_heightmap_size | ( 1u << half_heightmap_size ) );
+	out_freqs_x[ zero_freq_index ]= Complexf::Zero();
+	out_freqs_y[ zero_freq_index ]= Complexf::Zero();
 
+	for( var u32 mut y= 0u; y < heightmap_size; ++y )
+	{
+		var size_type start_address( y << heightmap_size_log2 );
+		var size_type end_address( ( y + 1u ) << heightmap_size_log2 );
+
+		auto src_line= in_freqs.subrange( start_address, end_address );
+		auto dst_line_x= out_freqs_x.subrange( start_address, end_address );
+		auto dst_line_y= out_freqs_y.subrange( start_address, end_address );
+
+		var f32 wave_number_y= f32(y) - f32(half_heightmap_size);
+
+		for( var u32 mut x= 0u; x < heightmap_size; ++x )
+		{
 			var f32 wave_number_x= f32(x) - f32(half_heightmap_size);
-			var f32 wave_number_y= f32(y) - f32(half_heightmap_size);
 
 			var f32 squares_sum= wave_number_x * wave_number_x + wave_number_y * wave_number_y;
 			if( squares_sum == 0.0f )
 			{
-				out_freqs_x[address]= Complexf( 0.0f, 0.0f );
-				out_freqs_y[address]= Complexf( 0.0f, 0.0f );
 				continue;
 			}
 
 			var f32 squares_sum_root= ust::sqrt( squares_sum );
 
-			var Complexf& in_complex_amplitude= in_freqs[address];
+			var Complexf& in_complex_amplitude= src_line[ size_type(x) ];
 			// Side shift is 90 degree rotated compared to vertical shift.
 			var Complexf complex_amplitude_rotated( -in_complex_amplitude.im, in_complex_amplitude.re );
 
-			out_freqs_x[address]= complex_amplitude_rotated * ( wave_number_x / squares_sum_root );
-			out_freqs_y[address]= complex_amplitude_rotated * ( wave_number_y / squares_sum_root );
+			dst_line_x[ size_type(x) ]= complex_amplitude_rotated * ( wave_number_x / squares_sum_root );
+			dst_line_y[ size_type(x) ]= complex_amplitude_rotated * ( wave_number_y / squares_sum_root );
 		}
 	}
 }
