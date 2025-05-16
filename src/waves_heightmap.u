@@ -156,12 +156,14 @@ fn GenerateSideShiftSpectra(
 				continue;
 			}
 
+			var f32 squares_sum_root= ust::sqrt( squares_sum );
+
 			var Complexf& in_complex_amplitude= in_freqs[address];
 			// Side shift is 90 degree rotated compared to vertical shift.
 			var Complexf complex_amplitude_rotated( -in_complex_amplitude.im, in_complex_amplitude.re );
 
-			out_freqs_x[address]= complex_amplitude_rotated * ( wave_number_x / squares_sum );
-			out_freqs_y[address]= complex_amplitude_rotated * ( wave_number_y / squares_sum );
+			out_freqs_x[address]= complex_amplitude_rotated * ( wave_number_x / squares_sum_root );
+			out_freqs_y[address]= complex_amplitude_rotated * ( wave_number_y / squares_sum_root );
 		}
 	}
 }
