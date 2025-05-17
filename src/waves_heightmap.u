@@ -125,7 +125,58 @@ fn EvaluateWavesSpectrumInTime(
 	}
 }
 
-fn GenerateWavesHeightmap(
+fn GenerateSideShiftSpectra(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</Complexf/> in_freqs,
+	ust::array_view_mut</Complexf/> out_freqs_x,
+	ust::array_view_mut</Complexf/> out_freqs_y )
+{
+	assert( in_freqs.size() == out_freqs_x.size() );
+	assert( in_freqs.size() == out_freqs_y.size() );
+
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+	var u32 half_heightmap_size= heightmap_size >> 1u;
+
+	assert( in_freqs.size() == size_type( heightmap_size * heightmap_size ) );
+
+	var size_type zero_freq_index( half_heightmap_size | ( 1u << half_heightmap_size ) );
+	out_freqs_x[ zero_freq_index ]= Complexf::Zero();
+	out_freqs_y[ zero_freq_index ]= Complexf::Zero();
+
+	for( var u32 mut y= 0u; y < heightmap_size; ++y )
+	{
+		var size_type start_address( y << heightmap_size_log2 );
+		var size_type end_address( ( y + 1u ) << heightmap_size_log2 );
+
+		auto src_line= in_freqs.subrange( start_address, end_address );
+		auto dst_line_x= out_freqs_x.subrange( start_address, end_address );
+		auto dst_line_y= out_freqs_y.subrange( start_address, end_address );
+
+		var f32 wave_number_y= f32(y) - f32(half_heightmap_size);
+
+		for( var u32 mut x= 0u; x < heightmap_size; ++x )
+		{
+			var f32 wave_number_x= f32(x) - f32(half_heightmap_size);
+
+			var f32 squares_sum= wave_number_x * wave_number_x + wave_number_y * wave_number_y;
+			if( squares_sum == 0.0f )
+			{
+				continue;
+			}
+
+			var f32 squares_sum_root= ust::sqrt( squares_sum );
+
+			var Complexf& in_complex_amplitude= src_line[ size_type(x) ];
+			// Side shift is 90 degree rotated compared to vertical shift.
+			var Complexf complex_amplitude_rotated( -in_complex_amplitude.im, in_complex_amplitude.re );
+
+			dst_line_x[ size_type(x) ]= complex_amplitude_rotated * ( wave_number_x / squares_sum_root );
+			dst_line_y[ size_type(x) ]= complex_amplitude_rotated * ( wave_number_y / squares_sum_root );
+		}
+	}
+}
+
+fn EvaluateHeightmapShifts(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
@@ -141,6 +192,111 @@ fn GenerateWavesHeightmap(
 	assert( freqs.size() == size_type( heightmap_area ) );
 
 	PerformFast2DInverseCenteredFourierTransform( heightmap_size_log2, freqs, intermediate_buffer, fft, out );
+}
+
+fn GenerateShiftedHeightmap(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> vertical_shifts,
+	ust::array_view_imut</f32/> shifts_x,
+	ust::array_view_imut</f32/> shifts_y,
+	ust::array_view_mut</HeightWithYShift/> temp_x_shifted_heightmap,
+	ust::array_view_mut</f32/> out )
+{
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+	var u32 heightmap_size_mask= heightmap_size - 1u;
+
+	var u32 heightmap_area= heightmap_size * heightmap_size;
+
+	assert( vertical_shifts.size() == shifts_x.size() );
+	assert( vertical_shifts.size() == shifts_y.size() );
+	assert( vertical_shifts.size() == out.size() );
+	assert( vertical_shifts.size() == size_type( heightmap_area ) );
+
+	// Perform X shift.
+	for( auto mut y= 0u; y < heightmap_size; ++y )
+	{
+		var size_type start_address( y << heightmap_size_log2 );
+		var size_type end_address( ( y + 1u ) << heightmap_size_log2 );
+
+		auto src_line_vectical= vertical_shifts.subrange( start_address, end_address );
+		auto src_line_x= shifts_x.subrange( start_address, end_address );
+		auto src_line_y= shifts_y.subrange( start_address, end_address );
+		auto dst_line= temp_x_shifted_heightmap.subrange( start_address, end_address );
+
+		for( auto mut x= 0u; x < heightmap_size; ++x )
+		{
+			var size_type x0( (x - 1u) & heightmap_size_mask );
+			var size_type x1( x );
+			var f32 height0= src_line_vectical[ x0 ];
+			var f32 height1= src_line_vectical[ x1 ];
+			var f32 shift_y0= src_line_y[ x0 ];
+			var f32 shift_y1= src_line_y[ x1 ];
+
+			var f32 shift_x0= src_line_x[ x0 ];
+			var f32 shift_x1= src_line_x[ x1 ];
+
+			var f32 x_start= f32( i32(x) - 1 ) + shift_x0;
+			var f32 x_end= f32(x) + shift_x1;
+
+			var i32 x_start_int= i32( ust::ceil( x_start ) );
+			var i32 x_end_int= i32( ust::ceil( x_end ) );
+
+			var f32 diff= x_end - x_start;
+
+			for( var i32 mut dst_x= x_start_int; dst_x < x_end_int; ++dst_x )
+			{
+				var f32 ratio= ( f32(dst_x) - x_start ) / diff;
+				var f32 inv_ratio= 1.0f - ratio;
+				var f32 height= height0 * inv_ratio + height1 * ratio;
+				var f32 shift_y= shift_y0 * inv_ratio + shift_y1 * ratio;
+				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= ust::make_array( height, shift_y );
+			}
+		}
+	}
+
+	var ust::array_view_imut</HeightWithYShift/> temp_x_shifted_heightmap_ref= temp_x_shifted_heightmap;
+
+	// Perform Y shift.
+	for( auto mut y= 0u; y < heightmap_size; ++y )
+	{
+		var u32 y0= (y - 1u) & heightmap_size_mask;
+		var u32 y1= y;
+
+		auto src_line0= temp_x_shifted_heightmap_ref.subrange(
+			size_type( y0 << heightmap_size_log2 ), size_type( ( y0 + 1u ) << heightmap_size_log2 ) );
+
+		auto src_line1= temp_x_shifted_heightmap_ref.subrange(
+			size_type( y1 << heightmap_size_log2 ), size_type( ( y1 + 1u ) << heightmap_size_log2 ) );
+
+		var f32 y_start_base= f32( i32(y) - 1 );
+		var f32 y_end_base= f32(y);
+
+		for( auto mut x= 0u; x < heightmap_size; ++x )
+		{
+			var HeightWithYShift& val0= src_line0[ size_type(x) ];
+			var HeightWithYShift& val1= src_line1[ size_type(x) ];
+
+			var f32 height0= val0[0];
+			var f32 height1= val1[0];
+			var f32 shift_y0=val0[1];
+			var f32 shift_y1= val1[1];
+
+			var f32 y_start= y_start_base + shift_y0;
+			var f32 y_end= y_end_base + shift_y1;
+
+			var i32 y_start_int= i32( ust::ceil(y_start) );
+			var i32 y_end_int= i32( ust::ceil(y_end) );
+
+			var f32 diff= y_end - y_start;
+			for( var i32 mut dst_y= y_start_int; dst_y < y_end_int; ++dst_y )
+			{
+				var f32 ratio= ( f32(dst_y) - y_start ) / diff;
+				var f32 inv_ratio= 1.0f - ratio;
+				var f32 height= height0 * inv_ratio + height1 * ratio;
+				out[ size_type( x | ( u32( dst_y & i32(heightmap_size_mask) ) << heightmap_size_log2 ) ) ]= height;
+			}
+		}
+	}
 }
 
 fn GenerateWavesColors(

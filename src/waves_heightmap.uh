@@ -14,13 +14,31 @@ fn EvaluateWavesSpectrumInTime(
 	ust::array_view_mut</Complexf/> out_freqs,
 	f32 time );
 
-// Generates heightmap in the output buffer from given spectrum.
-fn GenerateWavesHeightmap(
+// Generate spectra for waves side shifts from given vertical shift spectrum.
+fn GenerateSideShiftSpectra(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</Complexf/> in_freqs,
+	ust::array_view_mut</Complexf/> out_freqs_x,
+	ust::array_view_mut</Complexf/> out_freqs_y );
+
+// Generates shifts (vertical or side) in the output buffer from given spectrum.
+fn EvaluateHeightmapShifts(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
 	InverseCenteredFFT& fft,
 	ust::array_view_mut</f32/> out );
+
+// Using maps of vertical shifts and side shifts generate result heightmap.
+fn GenerateShiftedHeightmap(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> vertical_shifts,
+	ust::array_view_imut</f32/> shifts_x,
+	ust::array_view_imut</f32/> shifts_y,
+	ust::array_view_mut</HeightWithYShift/> temp_x_shifted_heightmap,
+	ust::array_view_mut</f32/> out );
+
+type HeightWithYShift= [ f32, 2 ];
 
 fn GenerateWavesColors(
 	u32 heightmap_size_log2,

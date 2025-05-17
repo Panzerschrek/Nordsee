@@ -3,6 +3,7 @@ import "color.uh"
 import "complex.uh"
 import "fourier_transform.uh"
 import "performance_counters.uh"
+import "waves_heightmap.uh"
 
 namespace NS
 {
@@ -32,9 +33,19 @@ private:
 	InverseCenteredFFT imut fft_;
 
 	f32 accumulated_time_s_= 0.0f;
+
 	ust::vector</Complexf/> waves_spectrum_time_evaluated_;
+	ust::vector</Complexf/> side_shifts_spectrum_x_;
+	ust::vector</Complexf/> side_shifts_spectrum_y_;
+
 	ust::vector</Complexf/> intermediate_buffer_;
+	ust::vector</HeightWithYShift/> temp_x_shifted_heightmap_;
+
+	ust::vector</f32/> vertical_shifts_;
+	ust::vector</f32/> side_shifts_x_;
+	ust::vector</f32/> side_shifts_y_;
 	ust::vector</f32/> heightmap_data_;
+
 	ust::vector</Color32/> color_data_;
 }
 
