@@ -63,7 +63,7 @@ fn Main() : i32
 	auto mut prev_tick= frame_time_performance_counter.GetCurrentTime();
 
 	var ust::vector</bool/> mut keyboard_state;
-	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 180.0f ) );
+	var CameraController mut camera_controller( Vec3f( 0.0f, 0.0f, 20.0f ) );
 
 	loop label main_loop
 	{
@@ -194,7 +194,7 @@ fn DrawHeightmap(
 	var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
 
 	var Vec3f cam_pos= camera_controller.GetPos();
-	var f32 additional_y_shift = -ust::tan( camera_controller.GetElevation() );
+	var f32 y_shift = ust::tan( camera_controller.GetElevation() ) + f32( surface.h ) / f32( surface.w );
 
 	var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
 
@@ -242,7 +242,7 @@ fn DrawHeightmap(
 			var f32 height = heightmap_data[size_type(address)];
 
 			var f32 screen_row = (height - cam_pos.z) / depth;
-			var i32 row(((1.0f - additional_y_shift) - screen_row) * screen_scale);
+			var i32 row( (y_shift - screen_row ) * screen_scale );
 
 			if(row >= prev_row)
 			{

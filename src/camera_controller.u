@@ -41,7 +41,7 @@ fn CameraController::Update( mut this, f32 time_delta_s, ust::array_view_imut</b
 	var f32 speed= 48.0f;
 	var f32 vertical_speed= speed;
 	var f32 angle_speed= 1.0f;
-	var f32 max_elevation= c_tau * 3.0f / 16.0f;
+	var f32 max_elevation= c_tau  / 8.0f;
 
 	var Vec3f forward_vector(ust::cos(azimuth_), ust::sin(azimuth_), 0.0f);
 	var Vec3f left_vector(-ust::sin(azimuth_), ust::cos(azimuth_), 0.0f);
