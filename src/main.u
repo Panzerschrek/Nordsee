@@ -26,7 +26,7 @@ fn Main() : i32
 {
 	ust::stdout_print( "Nordsee\n" );
 
-	var WavesHeightmapProcessor mut waves_heightmap_processor( 8u );
+	var WavesHeightmapProcessor mut waves_heightmap_processor( 9u );
 
 	unsafe( SDL_Init( SDL_INIT_VIDEO ) );
 

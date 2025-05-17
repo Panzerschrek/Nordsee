@@ -29,10 +29,10 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 	var f32 l= 1.0f / max_amplitude_k;
 
 	// A factor used for reducing amplitudes of short waves.
-	var f32 cut_amplitude_k= 16.0f;
+	var f32 cut_amplitude_k= 20.0f;
 
 	// How to scale overall waves.
-	var f32 final_amplitudes_scale= 0.5f;
+	var f32 final_amplitudes_scale= 1.0f;
 
 	var PseudoRandomGenerator mut rand_gen;
 
