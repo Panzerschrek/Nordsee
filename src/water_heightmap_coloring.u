@@ -17,6 +17,7 @@ fn GenerateWaterHeightmapColors(
 	var Vec3f sun_dir_normalized= Vec3f( 0.7f, 0.3f, 0.6f ).GetNormalized();
 
 	var Vec3f base_water_color( 68.0f, 129.0f, 179.0f );
+	var Vec3f foam_color( 200.0f, 200.0f, 200.0f );
 
 	var Vec3f sun_light_color( 0.6f, 0.6f, 0.5f );
 	var Vec3f sky_light_color( 0.4f, 0.4f, 0.5f );
@@ -50,8 +51,16 @@ fn GenerateWaterHeightmapColors(
 			var f32 angle_cos = sun_dir_normalized.Dot( normal );
 			var f32 sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
 
+			var f32 peak_factor=
+				adjacent_cells[1][1] -
+				0.125f * (adjacent_cells[0][0] + adjacent_cells[0][1] + adjacent_cells[0][2] + adjacent_cells[1][0] + adjacent_cells[1][2] + adjacent_cells[2][0] + adjacent_cells[2][1] + adjacent_cells[2][2] );
+
+			var f32 peak_factor_clamped= ust::max( 0.0f, ust::min( peak_factor * 2.0f, 1.0f ) );
+
+			var Vec3f self_color= ( peak_factor_clamped * foam_color + ( 1.0f - peak_factor_clamped ) * base_water_color );
+
 			var Vec3f light_sum= sun_light_color * sub_dir_dot_clampled + sky_light_color;
-			var Vec3f result_color= base_water_color * light_sum;
+			var Vec3f result_color= self_color * light_sum;
 
 			var u32 address = x + (y << heightmap_size_log2);
 
