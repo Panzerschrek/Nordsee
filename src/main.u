@@ -153,10 +153,13 @@ fn Main() : i32
 				drawable_surface );
 			} );
 
-		DebugDrawSpectrum(
-			waves_heightmap_processor.GetHeightmapSizeLog2(),
-			waves_heightmap_processor.GetCurrentSpectrum(),
-			drawable_surface );
+		if( false )
+		{
+			DebugDrawSpectrum(
+				waves_heightmap_processor.GetHeightmapSizeLog2(),
+				waves_heightmap_processor.GetCurrentSpectrum(),
+				drawable_surface );
+		}
 
 		DrawFPS( drawable_surface, frame_time_performance_counter.GetAverageDurationS() );
 		DrawPerformanceCounters( drawable_surface, performance_counters );
