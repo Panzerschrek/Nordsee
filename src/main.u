@@ -363,13 +363,13 @@ fn DrawPerformanceCounters(
 		++row;
 	}
 	{
-		auto mut text= "Heightmap generation:    0.0 ms";
-		stringify_value_as_milliseconds( counters.waves_heightmap_processor.heightmap_generation.GetAverageDurationS(), text );
+		auto mut text= "Vertical shifts calculation:    0.0 ms";
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.heightmap_vertical_shifts_calculation.GetAverageDurationS(), text );
 		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
 		++row;
 	}
 	{
-		auto mut text= "Heightmap side shifts calculation:    0.0 ms";
+		auto mut text= "Side shifts calculation:    0.0 ms";
 		stringify_value_as_milliseconds( counters.waves_heightmap_processor.heightmap_side_shifts_calculation.GetAverageDurationS(), text );
 		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
 		++row;

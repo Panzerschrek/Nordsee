@@ -13,15 +13,15 @@ fn WavesHeightmapProcessor::constructor( u32 heightmap_size_log2 )
 	var size_type heightmap_area= 1s << ( 2u * heightmap_size_log2 );
 
 	waves_spectrum_time_evaluated_.resize( heightmap_area, Complexf::Zero() );
-	side_shift_spectrum_x_.resize( heightmap_area, Complexf::Zero() );
-	side_shift_spectrum_y_.resize( heightmap_area, Complexf::Zero() );
+	side_shifts_spectrum_x_.resize( heightmap_area, Complexf::Zero() );
+	side_shifts_spectrum_y_.resize( heightmap_area, Complexf::Zero() );
 
 	intermediate_buffer_.resize( heightmap_area, Complexf::Zero() );
 	temp_x_shifted_heightmap_.resize( heightmap_area, ust::make_array( 0.0f, 0.0f ) );
 
-	vertical_shift_.resize( heightmap_area, 0.0f );
-	side_shift_data_x_.resize( heightmap_area, 0.0f );
-	side_shift_data_y_.resize( heightmap_area, 0.0f );
+	vertical_shifts_.resize( heightmap_area, 0.0f );
+	side_shifts_x_.resize( heightmap_area, 0.0f );
+	side_shifts_y_.resize( heightmap_area, 0.0f );
 	heightmap_data_.resize( heightmap_area, 0.0f );
 
 	color_data_.resize( heightmap_area, 0u );
@@ -63,26 +63,26 @@ fn WavesHeightmapProcessor::Update(
 	performance_counters.side_shift_spectrum_calculation.RunWithMeasurement(
 		lambda[&t= this]()
 		{
-			GenerateSideShiftSpectra( t.heightmap_size_log2_, t.waves_spectrum_time_evaluated_, t.side_shift_spectrum_x_, t.side_shift_spectrum_y_ );
+			GenerateSideShiftSpectra( t.heightmap_size_log2_, t.waves_spectrum_time_evaluated_, t.side_shifts_spectrum_x_, t.side_shifts_spectrum_y_ );
 		} );
 
-	performance_counters.heightmap_generation.RunWithMeasurement(
+	performance_counters.heightmap_vertical_shifts_calculation.RunWithMeasurement(
 		lambda[&t= this]()
 		{
-			GenerateWavesHeightmap( t.heightmap_size_log2_, t.waves_spectrum_time_evaluated_, t.intermediate_buffer_, t.fft_, t.vertical_shift_ );
+			EvaluateHeightmapShifts( t.heightmap_size_log2_, t.waves_spectrum_time_evaluated_, t.intermediate_buffer_, t.fft_, t.vertical_shifts_ );
 		} );
 
 	performance_counters.heightmap_side_shifts_calculation.RunWithMeasurement(
 		lambda[&t= this]()
 		{
-			GenerateWavesHeightmap( t.heightmap_size_log2_, t.side_shift_spectrum_x_, t.intermediate_buffer_, t.fft_, t.side_shift_data_x_ );
-			GenerateWavesHeightmap( t.heightmap_size_log2_, t.side_shift_spectrum_y_, t.intermediate_buffer_, t.fft_, t.side_shift_data_y_ );
+			EvaluateHeightmapShifts( t.heightmap_size_log2_, t.side_shifts_spectrum_x_, t.intermediate_buffer_, t.fft_, t.side_shifts_x_ );
+			EvaluateHeightmapShifts( t.heightmap_size_log2_, t.side_shifts_spectrum_y_, t.intermediate_buffer_, t.fft_, t.side_shifts_y_ );
 		} );
 
 	performance_counters.heightmap_side_shifting.RunWithMeasurement(
 		lambda[&t=this]()
 		{
-			GenerateShiftedHeightmap( t.heightmap_size_log2_, t.vertical_shift_, t.side_shift_data_x_, t.side_shift_data_y_, t.temp_x_shifted_heightmap_, t.heightmap_data_ );
+			GenerateShiftedHeightmap( t.heightmap_size_log2_, t.vertical_shifts_, t.side_shifts_x_, t.side_shifts_y_, t.temp_x_shifted_heightmap_, t.heightmap_data_ );
 		} );
 
 	performance_counters.colors_generation.RunWithMeasurement(

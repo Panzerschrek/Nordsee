@@ -176,7 +176,7 @@ fn GenerateSideShiftSpectra(
 	}
 }
 
-fn GenerateWavesHeightmap(
+fn EvaluateHeightmapShifts(
 	u32 heightmap_size_log2,
 	ust::array_view_imut</Complexf/> freqs,
 	ust::array_view_mut</Complexf/> intermediate_buffer,
@@ -196,9 +196,9 @@ fn GenerateWavesHeightmap(
 
 fn GenerateShiftedHeightmap(
 	u32 heightmap_size_log2,
-	ust::array_view_imut</f32/> vertical_shift,
-	ust::array_view_imut</f32/> shift_x,
-	ust::array_view_imut</f32/> shift_y,
+	ust::array_view_imut</f32/> vertical_shifts,
+	ust::array_view_imut</f32/> shifts_x,
+	ust::array_view_imut</f32/> shifts_y,
 	ust::array_view_mut</HeightWithYShift/> temp_x_shifted_heightmap,
 	ust::array_view_mut</f32/> out )
 {
@@ -207,10 +207,10 @@ fn GenerateShiftedHeightmap(
 
 	var u32 heightmap_area= heightmap_size * heightmap_size;
 
-	assert( vertical_shift.size() == shift_x.size() );
-	assert( vertical_shift.size() == shift_y.size() );
-	assert( vertical_shift.size() == out.size() );
-	assert( vertical_shift.size() == size_type( heightmap_area ) );
+	assert( vertical_shifts.size() == shifts_x.size() );
+	assert( vertical_shifts.size() == shifts_y.size() );
+	assert( vertical_shifts.size() == out.size() );
+	assert( vertical_shifts.size() == size_type( heightmap_area ) );
 
 	// Perform X shift.
 	for( auto mut y= 0u; y < heightmap_size; ++y )
@@ -218,9 +218,9 @@ fn GenerateShiftedHeightmap(
 		var size_type start_address( y << heightmap_size_log2 );
 		var size_type end_address( ( y + 1u ) << heightmap_size_log2 );
 
-		auto src_line_vectical= vertical_shift.subrange( start_address, end_address );
-		auto src_line_x= shift_x.subrange( start_address, end_address );
-		auto src_line_y= shift_y.subrange( start_address, end_address );
+		auto src_line_vectical= vertical_shifts.subrange( start_address, end_address );
+		auto src_line_x= shifts_x.subrange( start_address, end_address );
+		auto src_line_y= shifts_y.subrange( start_address, end_address );
 		auto dst_line= temp_x_shifted_heightmap.subrange( start_address, end_address );
 
 		for( auto mut x= 0u; x < heightmap_size; ++x )
@@ -229,14 +229,14 @@ fn GenerateShiftedHeightmap(
 			var size_type x1( x );
 			var f32 height0= src_line_vectical[ x0 ];
 			var f32 height1= src_line_vectical[ x1 ];
-			var f32 offset_y0= src_line_y[ x0 ];
-			var f32 offset_y1= src_line_y[ x1 ];
+			var f32 shift_y0= src_line_y[ x0 ];
+			var f32 shift_y1= src_line_y[ x1 ];
 
-			var f32 offset_x0= src_line_x[ x0 ];
-			var f32 offset_x1= src_line_x[ x1 ];
+			var f32 shift_x0= src_line_x[ x0 ];
+			var f32 shift_x1= src_line_x[ x1 ];
 
-			var f32 x_start= f32( i32(x) - 1 ) + offset_x0;
-			var f32 x_end= f32(x) + offset_x1;
+			var f32 x_start= f32( i32(x) - 1 ) + shift_x0;
+			var f32 x_end= f32(x) + shift_x1;
 
 			var i32 x_start_int= i32( ust::ceil( x_start ) );
 			var i32 x_end_int= i32( ust::ceil( x_end ) );
@@ -248,8 +248,8 @@ fn GenerateShiftedHeightmap(
 				var f32 ratio= ( f32(dst_x) - x_start ) / diff;
 				var f32 inv_ratio= 1.0f - ratio;
 				var f32 height= height0 * inv_ratio + height1 * ratio;
-				var f32 y_shift= offset_y0 * inv_ratio + offset_y1 * ratio;
-				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= ust::make_array( height, y_shift );
+				var f32 shift_y= shift_y0 * inv_ratio + shift_y1 * ratio;
+				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= ust::make_array( height, shift_y );
 			}
 		}
 	}
@@ -278,11 +278,11 @@ fn GenerateShiftedHeightmap(
 
 			var f32 height0= val0[0];
 			var f32 height1= val1[0];
-			var f32 offset_y0=val0[1];
-			var f32 offset_y1= val1[1];
+			var f32 shift_y0=val0[1];
+			var f32 shift_y1= val1[1];
 
-			var f32 y_start= y_start_base + offset_y0;
-			var f32 y_end= y_end_base + offset_y1;
+			var f32 y_start= y_start_base + shift_y0;
+			var f32 y_end= y_end_base + shift_y1;
 
 			var i32 y_start_int= i32( ust::ceil(y_start) );
 			var i32 y_end_int= i32( ust::ceil(y_end) );
