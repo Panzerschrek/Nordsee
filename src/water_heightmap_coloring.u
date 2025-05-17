@@ -1,5 +1,6 @@
 import "/math.u"
 import "/minmax.u"
+import "vec.uh"
 import "water_heightmap_coloring.uh"
 
 namespace NS
@@ -16,7 +17,10 @@ fn GenerateWaterHeightmapColors(
 	var [ f32, 3 ] sun_dir[ 0.7f, 0.3f, 0.6f ];
 	var f32 sun_dir_squared = sun_dir[0] * sun_dir[0] + sun_dir[1] * sun_dir[1] + sun_dir[2] * sun_dir[2];
 
-	var [ f32, 3 ] base_water_color[ 68.0f, 129.0f, 179.0f ];
+	var Vec3f base_water_color( 68.0f, 129.0f, 179.0f );
+
+	var Vec3f sun_light_color( 0.6f, 0.6f, 0.5f );
+	var Vec3f sky_light_color( 0.4f, 0.4f, 0.5f );
 
 	for( auto mut y= 0u; y < heightmap_size; ++y )
 	{
@@ -51,17 +55,16 @@ fn GenerateWaterHeightmapColors(
 			var f32 mut sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
 
 
-			var f32 light = 0.3f + 0.69f * sub_dir_dot_clampled;
+			var Vec3f light_sum= sun_light_color * sub_dir_dot_clampled + sky_light_color;
+			var Vec3f result_color= base_water_color * light_sum;
 
 			var u32 address = x + (y << heightmap_size_log2);
 
-			var [ f32, 3 ] color= base_water_color;
-
 			out_colors[ size_type(address) ] =
 				Color32(
-					u32(color[2] * light) |
-					(u32(color[1] * light) << 8u) |
-					(u32(color[0] * light) << 16u) );
+					u32( ust::max( 0.0f, ust::min( result_color.z, 255.0f ) ) ) |
+					( u32( ust::max( 0.0f, ust::min( result_color.y, 255.0f ) ) ) << 8u) |
+					( u32( ust::max( 0.0f, ust::min( result_color.x, 255.0f ) ) ) << 16u) );
 
 		}
 	}
