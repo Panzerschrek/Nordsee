@@ -249,8 +249,7 @@ fn GenerateShiftedHeightmap(
 				var f32 inv_ratio= 1.0f - ratio;
 				var f32 height= height0 * inv_ratio + height1 * ratio;
 				var f32 y_shift= offset_y0 * inv_ratio + offset_y1 * ratio;
-				var HeightWithYShift height_with_y_shift[ height, y_shift ];
-				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= height_with_y_shift;
+				dst_line[ size_type( dst_x & i32(heightmap_size_mask) ) ]= ust::make_array( height, y_shift );
 			}
 		}
 	}
