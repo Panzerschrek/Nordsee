@@ -1,3 +1,4 @@
+import "water_heightmap_coloring.uh"
 import "waves_heightmap_processor.uh"
 
 namespace NS
@@ -88,7 +89,7 @@ fn WavesHeightmapProcessor::Update(
 	performance_counters.colors_generation.RunWithMeasurement(
 		lambda[&t= this]()
 		{
-			GenerateWavesColors( t.heightmap_size_log2_, t.heightmap_data_, t.color_data_ );
+			GenerateWaterHeightmapColors( t.heightmap_size_log2_, t.heightmap_data_, t.color_data_ );
 		} );
 }
 
