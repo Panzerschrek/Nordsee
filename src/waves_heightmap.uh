@@ -1,5 +1,4 @@
 import "/vector.u"
-import "color.uh"
 import "complex.uh"
 import "fourier_transform.uh"
 
@@ -39,10 +38,5 @@ fn GenerateShiftedHeightmap(
 	ust::array_view_mut</f32/> out );
 
 type HeightWithYShift= [ f32, 2 ];
-
-fn GenerateWavesColors(
-	u32 heightmap_size_log2,
-	ust::array_view_imut</f32/> heightmap_data,
-	ust::array_view_mut</Color32/> out );
 
 } // namespace NS
