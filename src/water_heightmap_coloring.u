@@ -12,6 +12,9 @@ fn GenerateWaterHeightmapColors(
 	ust::array_view_imut</f32/> heightmap_data,
 	ust::array_view_mut</Color32/> out_colors )
 {
+	assert( heightmap_data.size() == out_colors.size() );
+	assert( heightmap_data.size() == ( 1s << ( 2u * heightmap_size_log2 ) ) );
+
 	var u32 heightmap_size= 1u << heightmap_size_log2;
 	var u32 heightmap_size_mask= heightmap_size - 1u;
 
