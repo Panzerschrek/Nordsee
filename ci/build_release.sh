@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./bin/u.._build_system1 build
+./compiler_gnu_linux/bin/u.._build_system1 build
