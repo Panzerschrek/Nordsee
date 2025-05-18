@@ -43,15 +43,15 @@ fn GenerateWaterHeightmapColors(
 				}
 			}
 
-			var f32 dh_dx =
-				(adjacent_cells[2][0] + adjacent_cells[2][1] + adjacent_cells[2][2]) -
-				(adjacent_cells[0][0] + adjacent_cells[0][1] + adjacent_cells[0][2]);
+			var f32 minus_dh_dx =
+				(adjacent_cells[0][0] + adjacent_cells[0][1] + adjacent_cells[0][2]) -
+				(adjacent_cells[2][0] + adjacent_cells[2][1] + adjacent_cells[2][2]);
 
-			var f32 dh_dy =
-				(adjacent_cells[0][2] + adjacent_cells[1][2] + adjacent_cells[2][2]) -
-				(adjacent_cells[0][0] + adjacent_cells[1][0] + adjacent_cells[2][0]);
+			var f32 minus_dh_dy =
+				(adjacent_cells[0][0] + adjacent_cells[1][0] + adjacent_cells[2][0]) -
+				(adjacent_cells[0][2] + adjacent_cells[1][2] + adjacent_cells[2][2]);
 
-			var Vec3f normal= Vec3f( -dh_dx, -dh_dy, 6.0f ).GetNormalized();
+			var Vec3f normal= Vec3f( minus_dh_dx, minus_dh_dy, 6.0f ).GetNormalized();
 
 			var f32 angle_cos = sun_dir_normalized.Dot( normal );
 			var f32 sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
