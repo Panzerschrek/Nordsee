@@ -1,0 +1,25 @@
+name: build_gnu_linux_release
+
+on: [push]
+
+jobs:
+  build_gnu_linux_release:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: Download Ü for GNU/Linux
+      id: download-compiler-for-gnu-linux
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        repo: Panzerschrek/U-00DC-Sprache
+        branch: master
+        workflow: main.yml
+        if_no_artifact_found: fail
+    - name: build project
+      run: |
+        sudo apt-get update && sudo apt-get install libsdl2-dev
+        ./ci/build_gnu_linux_release.sh
+    - uses: actions/upload-artifact@v4
+      with:
+        name: nordsee_gnu_linux
+        path: build/release/Nordsee
