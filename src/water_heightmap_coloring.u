@@ -56,9 +56,9 @@ fn GenerateWaterHeightmapColors(
 			var f32 angle_cos = sun_dir_normalized.Dot( normal );
 			var f32 sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
 
-			var f32 slope_factor= 1.0f - normal.z;
+			var f32 inv_slope_factor= normal.z * normal.z;
 
-			var Vec3f water_color= slope_factor * water_slopes_color + ( 1.0f - slope_factor ) * base_water_color;
+			var Vec3f water_color= ( 1.0f - inv_slope_factor ) * water_slopes_color + inv_slope_factor * base_water_color;
 
 			var f32 peak_factor=
 				adjacent_cells[1][1] -
