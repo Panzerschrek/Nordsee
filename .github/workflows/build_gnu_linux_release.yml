@@ -1,9 +1,9 @@
-name: CI
+name: build_gnu_linux_release
 
 on: [push]
 
 jobs:
-  build_release:
+  build_gnu_linux_release:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v1
@@ -18,7 +18,7 @@ jobs:
     - name: build project
       run: |
         sudo apt-get update && sudo apt-get install libsdl2-dev
-        ./ci/build_release.sh
+        ./ci/build_gnu_linux_release.sh
     - uses: actions/upload-artifact@v4
       with:
         name: nordsee_gnu_linux
