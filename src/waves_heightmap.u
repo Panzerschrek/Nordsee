@@ -32,7 +32,7 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 	var f32 cut_amplitude_k= 20.0f;
 
 	// How to scale overall waves.
-	var f32 final_amplitudes_scale= 1.0f;
+	var f32 final_amplitudes_scale= 1.3f;
 
 	var PseudoRandomGenerator mut rand_gen;
 
@@ -52,7 +52,14 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 			}
 			var f32 k4= k2 * k2;
 
-			var f32 dot= k.Dot( wind_direction );
+			var f32 mut dot= k.Dot( wind_direction );
+
+			if( dot < 0.0f )
+			{
+				// Reduce amplitude of waves moving against wind direction.
+				dot*= 0.35f;
+			}
+
 			var f32 dot2= dot * dot;
 
 			// Some sort of Phillips spectrum.
