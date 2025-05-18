@@ -1,0 +1,114 @@
+import "/assert.u"
+import "/math.u"
+import "/minmax.u"
+import "vec.uh"
+import "water_heightmap_coloring.uh"
+
+namespace NS
+{
+
+fn GenerateWaterHeightmapColors(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> heightmap_data,
+	ust::array_view_mut</Color32/> out_colors )
+{
+	assert( heightmap_data.size() == out_colors.size() );
+	assert( heightmap_data.size() == ( 1s << ( 2u * heightmap_size_log2 ) ) );
+
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+	var i32 heightmap_size_mask( heightmap_size - 1u );
+
+	var Vec3f sun_dir_normalized= Vec3f( 0.7f, 0.3f, 0.4f ).GetNormalized();
+
+	var Vec3f base_water_color( 68.0f, 129.0f, 179.0f );
+	var Vec3f water_slopes_color( 80.0f, 129.0f, 100.0f );
+	var Vec3f foam_color( 200.0f, 200.0f, 200.0f );
+
+	var Vec3f sun_light_color( 0.7f, 0.7f, 0.6f );
+	var Vec3f sky_light_color( 0.4f, 0.4f, 0.5f );
+
+	for( auto mut y= 0u; y < heightmap_size; ++y )
+	{
+		var u32 current_row_offset= ( y << heightmap_size_log2 );
+
+		auto out_row= out_colors.subrange( size_type( ( y << heightmap_size_log2 ) ), size_type( ( ( y + 1u ) << heightmap_size_log2 ) ) );
+
+		for( auto mut x= 0u; x < heightmap_size; ++x )
+		{
+			var f32 height= heightmap_data[ size_type( x | current_row_offset ) ];
+			var f32 height_minus_x= heightmap_data[ size_type( u32( ( i32(x) - 1 ) & heightmap_size_mask ) | current_row_offset ) ];
+			var f32 height_plus_x= heightmap_data[ size_type( u32( ( i32(x) + 1 ) & heightmap_size_mask ) | current_row_offset ) ];
+			var f32 height_minus_y= heightmap_data[ size_type( x | ( u32( ( i32(y) - 1 ) & heightmap_size_mask ) << heightmap_size_log2 ) ) ];
+			var f32 height_plus_y= heightmap_data[ size_type( x | ( u32( ( i32(y) + 1 ) & heightmap_size_mask ) << heightmap_size_log2 ) ) ];
+
+			var Vec3f normal= Vec3f( height_minus_x - height_plus_x, height_minus_y - height_plus_y, 2.0f ).GetNormalized();
+
+			var f32 angle_cos = sun_dir_normalized.Dot( normal );
+			var f32 sub_dir_dot_clampled = ust::max( 0.0f, angle_cos );
+
+			var f32 inv_slope_factor= normal.z * normal.z;
+
+			var Vec3f water_color= ( 1.0f - inv_slope_factor ) * water_slopes_color + inv_slope_factor * base_water_color;
+
+			var f32 peak_factor=
+				height -
+				0.25f * ( height_minus_x + height_plus_x + height_minus_y + height_plus_y );
+
+			var f32 peak_factor_clamped= ust::max( 0.0f, ust::min( peak_factor * 2.0f, 1.0f ) );
+
+			var Vec3f color_with_foam= ( peak_factor_clamped * foam_color + ( 1.0f - peak_factor_clamped ) * water_color );
+
+			var Vec3f light_sum= sun_light_color * sub_dir_dot_clampled + sky_light_color;
+			var Vec3f result_color= color_with_foam * light_sum;
+
+			out_row[ size_type(x) ] =
+				Color32(
+					u32( ust::min( result_color.z, 255.0f ) ) |
+					( u32( ust::min( result_color.y, 255.0f ) ) << 8u) |
+					( u32( ust::min( result_color.x, 255.0f ) ) << 16u) );
+		}
+	}
+}
+
+fn GenerateDebugWavesColors(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> heightmap_data,
+	ust::array_view_mut</Color32/> out )
+{
+	assert( heightmap_data.size() == out.size() );
+	assert( heightmap_data.size() == ( 1s << ( 2u * heightmap_size_log2 ) ) );
+
+	var f32 mut min_height= heightmap_data.front(), mut max_height= min_height;
+
+	foreach( h : heightmap_data )
+	{
+		ust::min_assign( min_height, h );
+		ust::max_assign( max_height, h );
+	}
+
+	var f32 height_range= max_height - min_height;
+
+	foreach( pair : heightmap_data.iter().zip( out.iter() ) )
+	{
+		var f32 intensity= ust::max( 0.0f, ust::min( ( pair.first - min_height ) / height_range, 1.0f ) );
+		var u32 intensity_i( intensity * 255.0f );
+		pair.second= intensity_i | (intensity_i << 8u) | (intensity_i << 16u);
+	}
+
+	var u32 heightmap_size= 1u << heightmap_size_log2;
+
+	var Color32 red= 0x00FF0000u;
+	var Color32 green= 0x0000FF00u;
+
+	for( var u32 mut x= 0u; x < heightmap_size; ++x )
+	{
+		out[ size_type(x) ]= red;
+	}
+
+	for( var u32 mut y= 0u; y < heightmap_size; ++y )
+	{
+		out[ size_type( y << heightmap_size_log2 ) ]= green;
+	}
+}
+
+} // namespace NS

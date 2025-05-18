@@ -1,0 +1,17 @@
+import "/random_access_range.u"
+import "color.uh"
+
+namespace NS
+{
+
+fn GenerateWaterHeightmapColors(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> heightmap_data,
+	ust::array_view_mut</Color32/> out_colors );
+
+fn GenerateDebugWavesColors(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> heightmap_data,
+	ust::array_view_mut</Color32/> out );
+
+} // namespace NS
