@@ -57,6 +57,8 @@ fn Main() : i32
 		return -1;
 	}
 
+	var bool mut draw_performance_counters= false;
+
 	var PerformanceCounter mut frame_time_performance_counter;
 	var PerformanceCounters mut performance_counters;
 
@@ -94,6 +96,10 @@ fn Main() : i32
 				if( keyboard_event.keysym.scancode == SDL_SCANCODE_ESCAPE )
 				{
 					break label main_loop;
+				}
+				if( keyboard_event.keysym.scancode == SDL_SCANCODE_Z )
+				{
+					draw_performance_counters= !draw_performance_counters;
 				}
 			}
 		}
@@ -162,7 +168,11 @@ fn Main() : i32
 		}
 
 		DrawFPS( drawable_surface, frame_time_performance_counter.GetAverageDurationS() );
-		DrawPerformanceCounters( drawable_surface, performance_counters );
+
+		if( draw_performance_counters )
+		{
+			DrawPerformanceCounters( drawable_surface, performance_counters );
+		}
 
 		if( must_lock_surface )
 		{
