@@ -16,7 +16,7 @@ fn GenerateWaterHeightmapColors(
 	assert( heightmap_data.size() == ( 1s << ( 2u * heightmap_size_log2 ) ) );
 
 	var u32 heightmap_size= 1u << heightmap_size_log2;
-	var u32 heightmap_size_mask= heightmap_size - 1u;
+	var i32 heightmap_size_mask( heightmap_size - 1u );
 
 	var Vec3f sun_dir_normalized= Vec3f( 0.7f, 0.3f, 0.4f ).GetNormalized();
 
@@ -29,40 +29,27 @@ fn GenerateWaterHeightmapColors(
 
 	for( auto mut y= 0u; y < heightmap_size; ++y )
 	{
+		var u32 current_row_offset= ( y << heightmap_size_log2 );
 		for( auto mut x= 0u; x < heightmap_size; ++x )
 		{
-			var [ [ f32, 3 ], 3 ] mut adjacent_cells = zero_init;
-			for(var i32 mut dx = 0; dx < 3; ++dx)
-			{
-				for(var i32 mut dy = 0; dy < 3; ++dy)
-				{
-					var u32 address =
-						u32((i32(x) + dx - 1) & i32(heightmap_size_mask)) +
-						u32(((i32(y) + dy - 1) & i32(heightmap_size_mask)) << heightmap_size_log2);
-					adjacent_cells[u32(dx)][u32(dy)] = heightmap_data[size_type(address)];
-				}
-			}
+			var f32 height= heightmap_data[ size_type( x | current_row_offset ) ];
+			var f32 height_minus_x= heightmap_data[ size_type( u32( ( i32(x) - 1 ) & heightmap_size_mask ) | current_row_offset ) ];
+			var f32 height_plus_x= heightmap_data[ size_type( u32( ( i32(x) + 1 ) & heightmap_size_mask ) | current_row_offset ) ];
+			var f32 height_minus_y= heightmap_data[ size_type( x | ( u32( ( i32(y) - 1 ) & heightmap_size_mask ) << heightmap_size_log2 ) ) ];
+			var f32 height_plus_y= heightmap_data[ size_type( x | ( u32( ( i32(y) + 1 ) & heightmap_size_mask ) << heightmap_size_log2 ) ) ];
 
-			var f32 minus_dh_dx =
-				(adjacent_cells[0][0] + adjacent_cells[0][1] + adjacent_cells[0][2]) -
-				(adjacent_cells[2][0] + adjacent_cells[2][1] + adjacent_cells[2][2]);
-
-			var f32 minus_dh_dy =
-				(adjacent_cells[0][0] + adjacent_cells[1][0] + adjacent_cells[2][0]) -
-				(adjacent_cells[0][2] + adjacent_cells[1][2] + adjacent_cells[2][2]);
-
-			var Vec3f normal= Vec3f( minus_dh_dx, minus_dh_dy, 6.0f ).GetNormalized();
+			var Vec3f normal= Vec3f( height_minus_x - height_plus_x, height_minus_y - height_plus_y, 2.0f ).GetNormalized();
 
 			var f32 angle_cos = sun_dir_normalized.Dot( normal );
-			var f32 sub_dir_dot_clampled = ust::max(0.0f, angle_cos);
+			var f32 sub_dir_dot_clampled = ust::max( 0.0f, angle_cos );
 
 			var f32 inv_slope_factor= normal.z * normal.z;
 
 			var Vec3f water_color= ( 1.0f - inv_slope_factor ) * water_slopes_color + inv_slope_factor * base_water_color;
 
 			var f32 peak_factor=
-				adjacent_cells[1][1] -
-				0.125f * (adjacent_cells[0][0] + adjacent_cells[0][1] + adjacent_cells[0][2] + adjacent_cells[1][0] + adjacent_cells[1][2] + adjacent_cells[2][0] + adjacent_cells[2][1] + adjacent_cells[2][2] );
+				height -
+				0.25f * ( height_minus_x + height_plus_x + height_minus_y + height_plus_y );
 
 			var f32 peak_factor_clamped= ust::max( 0.0f, ust::min( peak_factor * 2.0f, 1.0f ) );
 
