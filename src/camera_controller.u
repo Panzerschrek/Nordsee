@@ -38,7 +38,7 @@ fn CameraController::Update( mut this, f32 time_delta_s, ust::array_view_imut</b
 		key_turn_up(SDL_SCANCODE_UP),
 		key_turn_down(SDL_SCANCODE_DOWN);
 
-	var f32 speed= 48.0f;
+	var f32 speed= 32.0f;
 	var f32 vertical_speed= speed;
 	var f32 angle_speed= 1.0f;
 	var f32 max_elevation= c_tau  / 8.0f;
