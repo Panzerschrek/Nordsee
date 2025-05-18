@@ -19,3 +19,7 @@ jobs:
       run: |
         sudo apt-get update && sudo apt-get install libsdl2-dev
         ./ci/build_release.sh
+    - uses: actions/upload-artifact@v4
+      with:
+        name: nordsee_gnu_linux
+        path: build/release/Nordsee
