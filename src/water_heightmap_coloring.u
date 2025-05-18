@@ -30,6 +30,9 @@ fn GenerateWaterHeightmapColors(
 	for( auto mut y= 0u; y < heightmap_size; ++y )
 	{
 		var u32 current_row_offset= ( y << heightmap_size_log2 );
+
+		auto out_row= out_colors.subrange( size_type( ( y << heightmap_size_log2 ) ), size_type( ( ( y + 1u ) << heightmap_size_log2 ) ) );
+
 		for( auto mut x= 0u; x < heightmap_size; ++x )
 		{
 			var f32 height= heightmap_data[ size_type( x | current_row_offset ) ];
@@ -58,14 +61,11 @@ fn GenerateWaterHeightmapColors(
 			var Vec3f light_sum= sun_light_color * sub_dir_dot_clampled + sky_light_color;
 			var Vec3f result_color= color_with_foam * light_sum;
 
-			var u32 address = x + (y << heightmap_size_log2);
-
-			out_colors[ size_type(address) ] =
+			out_row[ size_type(x) ] =
 				Color32(
 					u32( ust::min( result_color.z, 255.0f ) ) |
 					( u32( ust::min( result_color.y, 255.0f ) ) << 8u) |
 					( u32( ust::min( result_color.x, 255.0f ) ) << 16u) );
-
 		}
 	}
 }
