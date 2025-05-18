@@ -8,7 +8,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Download Ü for GNU/Linux
-      id: download-ü-for-gnu-linux
+      id: download-compiler-for-gnu-linux
       uses: dawidd6/action-download-artifact@v2
       with:
         repo: Panzerschrek/U-00DC-Sprache
