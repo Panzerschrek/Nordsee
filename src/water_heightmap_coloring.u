@@ -18,13 +18,13 @@ fn GenerateWaterHeightmapColors(
 	var u32 heightmap_size= 1u << heightmap_size_log2;
 	var u32 heightmap_size_mask= heightmap_size - 1u;
 
-	var Vec3f sun_dir_normalized= Vec3f( 0.7f, 0.3f, 0.6f ).GetNormalized();
+	var Vec3f sun_dir_normalized= Vec3f( 0.7f, 0.3f, 0.4f ).GetNormalized();
 
 	var Vec3f base_water_color( 68.0f, 129.0f, 179.0f );
 	var Vec3f water_slopes_color( 80.0f, 129.0f, 100.0f );
 	var Vec3f foam_color( 200.0f, 200.0f, 200.0f );
 
-	var Vec3f sun_light_color( 0.6f, 0.6f, 0.5f );
+	var Vec3f sun_light_color( 0.7f, 0.7f, 0.6f );
 	var Vec3f sky_light_color( 0.4f, 0.4f, 0.5f );
 
 	for( auto mut y= 0u; y < heightmap_size; ++y )
