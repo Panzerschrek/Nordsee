@@ -75,9 +75,9 @@ fn GenerateWaterHeightmapColors(
 
 			out_colors[ size_type(address) ] =
 				Color32(
-					u32( ust::max( 0.0f, ust::min( result_color.z, 255.0f ) ) ) |
-					( u32( ust::max( 0.0f, ust::min( result_color.y, 255.0f ) ) ) << 8u) |
-					( u32( ust::max( 0.0f, ust::min( result_color.x, 255.0f ) ) ) << 16u) );
+					u32( ust::min( result_color.z, 255.0f ) ) |
+					( u32( ust::min( result_color.y, 255.0f ) ) << 8u) |
+					( u32( ust::min( result_color.x, 255.0f ) ) << 16u) );
 
 		}
 	}
