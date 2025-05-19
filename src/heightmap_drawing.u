@@ -27,8 +27,8 @@ fn DrawHeightmap(
 	var f32 ray_rotate_cos = ust::cos(cam_angle);
 	var f32 ray_rotate_sin = ust::sin(cam_angle);
 
-	var f32 constexpr start_depth_base= 2.0f;
-	var f32 constexpr depth_power_factor= 1.01f;
+	var f32 constexpr start_depth_base= 4.0f;
+	var f32 constexpr depth_power_factor= 1.005f;
 
 	// Offset start depth of each second column by square root of depth power factor.
 	// Doing so we can hide artifacts of step-by-step rendering caused by too heigh value of the depth factor.
