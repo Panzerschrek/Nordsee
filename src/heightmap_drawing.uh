@@ -1,0 +1,14 @@
+import "camera_controller.uh"
+import "drawable_surface.uh"
+
+namespace NS
+{
+
+fn DrawHeightmap(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> heightmap_data,
+	ust::array_view_imut</Color32/> color_data,
+	CameraController& camera_controller,
+	DrawableSurface& surface );
+
+} // namespace NS

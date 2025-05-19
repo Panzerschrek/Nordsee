@@ -1,0 +1,100 @@
+import "/minmax.u"
+import "heightmap_drawing.uh"
+
+namespace NS
+{
+
+fn DrawHeightmap(
+	u32 heightmap_size_log2,
+	ust::array_view_imut</f32/> heightmap_data,
+	ust::array_view_imut</Color32/> color_data,
+	CameraController& camera_controller,
+	DrawableSurface& surface )
+{
+	var u32 heightmap_size = 1u << heightmap_size_log2;
+	var u32 heightmap_size_mask= heightmap_size - 1u;
+
+	var f32 max_depth = 1536.0f;
+
+	var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
+
+	var Vec3f cam_pos= camera_controller.GetPos();
+	var f32 y_shift = ust::tan( camera_controller.GetElevation() ) + f32( surface.h ) / f32( surface.w );
+
+	var f32 screen_scale = 0.5f * f32(ust::max(surface.w, surface.h));
+
+	var f32 cam_angle = camera_controller.GetAzimuth();
+	var f32 ray_rotate_cos = ust::cos(cam_angle);
+	var f32 ray_rotate_sin = ust::sin(cam_angle);
+
+	var f32 constexpr start_depth_base= 2.0f;
+	var f32 constexpr depth_power_factor= 1.01f;
+
+	// Offset start depth of each second column by square root of depth power factor.
+	// Doing so we can hide artifacts of step-by-step rendering caused by too heigh value of the depth factor.
+	var [ f32, 2 ] start_depth
+	[
+		start_depth_base,
+		start_depth_base * ust::sqrt( depth_power_factor ),
+	];
+
+	// Process columns.
+	// Draw columns in pairs effectively reducing horizontal resolution by 2,
+	// since it's too expensive to render each column properly because of poor cache-locality of column-based rendering into a row-based framebuffer.
+	var u32 max_column= surface.w - 1u;
+	for( var u32 mut column= 0u; column < max_column; column+= 2u )
+	{
+		var f32 ray_side_offset = (f32(surface.w) * 0.5f - f32(column)) / screen_scale;
+
+		auto dst_column= surface.data.subrange_start( size_type(column) );
+
+		var i32 mut prev_row( surface.h );
+
+		for( var f32 mut depth= start_depth[ (column >> 1u) & 1u ];
+			depth < max_depth;
+			depth *= depth_power_factor )
+		{
+			var Vec2f ray_vec( depth, ray_side_offset * depth );
+			var Vec2f ray_vec_rotated(
+				ray_vec.x * ray_rotate_cos - ray_vec.y * ray_rotate_sin,
+				ray_vec.y * ray_rotate_cos + ray_vec.x * ray_rotate_sin );
+			var Vec2f terrain_pos= ray_vec_rotated + Vec2f( cam_pos.x, cam_pos.y );
+
+			var u32 address =
+				u32(i32(ust::floor(terrain_pos.x)) & i32(heightmap_size_mask)) +
+				u32((i32(ust::floor(terrain_pos.y)) & i32(heightmap_size_mask)) << heightmap_size_log2);
+
+			var f32 height = heightmap_data[size_type(address)];
+
+			var f32 screen_row = (height - cam_pos.z) / depth;
+			var i32 row( (y_shift - screen_row ) * screen_scale );
+
+			if(row >= prev_row)
+			{
+				continue;
+			}
+
+			var Color32 color= color_data[size_type(address)];
+
+			var i32 min_row= ust::max(row, 0);
+			for( var i32 mut dst_row = prev_row - 1; dst_row >= min_row; --dst_row)
+			{
+				var size_type index( u32(dst_row) * surface.pitch );
+				dst_column[ index ]= color;
+				dst_column[ index + 1s ]= color;
+			}
+
+			prev_row = min_row;
+		}
+
+		// Fill remaining sky with fog.
+		for(var i32 mut dst_row = prev_row - 1; dst_row >= 0; --dst_row)
+		{
+			var size_type index( u32(dst_row) * surface.pitch );
+			dst_column[ index ]= c_sky_color;
+			dst_column[ index + 1s ]= c_sky_color;
+		}
+	}
+}
+
+} // namespace NS
