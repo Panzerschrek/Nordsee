@@ -1,0 +1,159 @@
+import "/assert.u"
+import "debug_drawing.uh"
+import "math_constants.uh"
+import "text_printer.uh"
+import "vec.uh"
+
+namespace NS
+{
+
+fn DebugDrawSpectrum(
+	u32 size_log2,
+	ust::array_view_imut</Complexf/> spectrum,
+	DrawableSurface& surface )
+{
+	var u32 size= 1u << size_log2;
+	assert( spectrum.size() == size_type( size * size ) );
+
+	var f32 mut max_square_magnitude= 0.0f;
+	foreach( &c : spectrum )
+	{
+		ust::max_assign( max_square_magnitude, c.SquareMagnitude() );
+	}
+
+	var Complexf angle_red= Complexf::ImaginaryExponent( c_tau * 0.0f / 3.0f );
+	var Complexf angle_green= Complexf::ImaginaryExponent( c_tau * 1.0f / 3.0f );
+	var Complexf angle_blue= Complexf::ImaginaryExponent( c_tau * 2.0f / 3.0f );
+
+	var f32 max_magnitude= ust::sqrt( max_square_magnitude );
+
+	for( var u32 mut y= 0u; y < size; ++y )
+	{
+		auto src_row= spectrum.subrange( size_type( y << size_log2 ), size_type( ( y + 1u ) << size_log2 ) );
+		auto dst_row= surface.data.subrange( size_type( y * surface.pitch ), size_type( ( y + 1u ) * surface.pitch ) );
+
+		for( var u32 mut x= 0u; x < size; ++x )
+		{
+			var Complexf& c= src_row[ size_type(x) ];
+
+			var f32 red_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_red.re, angle_red.im ) );
+			var f32 green_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_green.re, angle_green.im ) );
+			var f32 blue_dot= Vec2f( c.re, c.im ).Dot( Vec2f( angle_blue.re, angle_blue.im ) );
+
+			var f32 red_intensity= ust::sqrt( ust::max( 0.0f, red_dot / max_magnitude ) );
+			var f32 green_intensity= ust::sqrt( ust::max( 0.0f, green_dot / max_magnitude ) );
+			var f32 blue_intensity=  ust::sqrt( ust::max( 0.0f, blue_dot / max_magnitude ) );
+
+			var Color32 color=
+				u32( ust::min( blue_intensity, 1.0f ) * 255.0f ) |
+				( u32( ust::min( green_intensity, 1.0f ) * 255.0f ) << 8u ) |
+				( u32( ust::min( red_intensity, 1.0f ) * 255.0f ) << 16u );
+			dst_row[ size_type(x) ]= color;
+		}
+	}
+}
+
+fn DrawFPS( DrawableSurface& surface, f32 frame_duration_s )
+{
+	auto mut text= "   0.0 fps";
+	StringifyValueInFourPointOneFormat( 1.0f / frame_duration_s, text );
+
+	var Color32 color= 0xFFFFFFFFu;
+
+	DrawText( surface, text, i32( surface.w - 84u ), 2, color, 1u );
+
+	var f32 frame_duration_ms= 1000.0f * frame_duration_s;
+
+	auto mut frame_time_text= "   0.0 ms";
+	StringifyValueInFourPointOneFormat( frame_duration_ms, frame_time_text );
+
+	DrawText( surface, frame_time_text, i32( surface.w - 76u ), 20, color, 1u );
+}
+
+fn DrawPerformanceCounters( DrawableSurface& surface, PerformanceCounters& counters )
+{
+	var Color32 color= 0xFFFFFFFFu;
+
+	auto stringify_value_as_milliseconds=
+		lambda[]( f32 val, ust::array_view_mut</char8/> pattern )
+		{
+			var size_type s= pattern.size();
+			StringifyValueInFourPointOneFormat( 1000.0f * val, pattern.subrange_start( s - 9s ) );
+		};
+
+	auto row_step= 18;
+	auto num_rows= 8;
+	auto mut y_offset= i32(surface.h) - num_rows * row_step;
+	auto mut row= 0;
+
+	{
+		auto mut text= "Spectrum in time evaluation:    0.0 ms";
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.spectrum_in_time_evaluation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Side shift spectrum calculation:    0.0 ms";
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.side_shift_spectrum_calculation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Vertical shifts calculation:    0.0 ms";
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.heightmap_vertical_shifts_calculation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Side shifts calculation:    0.0 ms";
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.heightmap_side_shifts_calculation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Heightmap side shifting:    0.0 ms";
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.heightmap_side_shifting.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Colors generation:    0.0 ms";
+		stringify_value_as_milliseconds( counters.waves_heightmap_processor.colors_generation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Total heightmap generation:    0.0 ms";
+		stringify_value_as_milliseconds( counters.total_heightmap_generation.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+	{
+		auto mut text= "Heightmap rendering:    0.0 ms";
+		stringify_value_as_milliseconds( counters.heightmap_rendering.GetAverageDurationS(), text );
+		DrawText( surface, text, 0, y_offset + row * row_step, color, 1u );
+		++row;
+	}
+}
+
+fn StringifyValueInFourPointOneFormat( f32 val, ust::array_view_mut</char8/> text )
+{
+	var u32 val_int( val );
+
+	if( val_int >= 1000u )
+	{
+		text[0s]= char8( u32('0') + val_int / 1000u );
+	}
+	if( val_int >= 100u )
+	{
+		text[1s]= char8( u32('0') + val_int / 100u % 10u );
+	}
+	if( val_int >= 10u )
+	{
+		text[2s]= char8( u32('0') + val_int / 10u % 10u );
+	}
+	text[3s]= char8( u32('0') + val_int % 10u );
+	text[5s]= char8( u32('0') + u32(val * 10.0f ) % 10u );
+}
+
+} // namespace NS

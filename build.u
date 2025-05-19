@@ -22,9 +22,10 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 		sdl_install_prefix= ( is_host_windows ? ust::string_view8("") : ust::string_view8( "/usr" ) );
 	}
 
-	var [ ust::string8, 11 ] mut sources
+	var [ ust::string8, 12 ] mut sources
 	[
 		"src/camera_controller.u",
+		"src/debug_drawing.u",
 		"src/gaussian_complex_random.u",
 		"src/fourier_transform.u",
 		"src/main.u",

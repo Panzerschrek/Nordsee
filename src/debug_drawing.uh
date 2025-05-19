@@ -1,0 +1,17 @@
+import "complex.uh"
+import "drawable_surface.uh"
+import "performance_counters.uh"
+
+namespace NS
+{
+
+fn DebugDrawSpectrum(
+	u32 size_log2,
+	ust::array_view_imut</Complexf/> spectrum,
+	DrawableSurface& surface );
+
+fn DrawFPS( DrawableSurface& surface, f32 frame_duration_s );
+
+fn DrawPerformanceCounters( DrawableSurface& surface, PerformanceCounters& counters );
+
+} // namespace NS
