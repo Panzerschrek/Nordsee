@@ -43,6 +43,8 @@ Then you need to specify path to this file in command line options:
 u.._build_system1 build --configuration-options configuration_options.json
 ```
 
+It's also recommended to use compilation options like `--halt-mode unreachable` and `--target-cpu skylake` to achieve maximum performance.
+
 
 ### Authors
 Copyright © 2025 "Panzerschrek".
