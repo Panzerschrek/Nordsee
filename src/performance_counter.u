@@ -43,6 +43,11 @@ fn PerformanceCounter::CalculateDurationS( this, TimePoint start_time, TimePoint
 
 fn PerformanceCounter::GetAverageDurationS( this ) : f32
 {
+	if( measurements_window_.empty() )
+	{
+		return 0.0f; // Avoid division by zero.
+	}
+
 	var f32 mut sum= 0.0f;
 	foreach( v : measurements_window_ )
 	{
