@@ -86,6 +86,27 @@ fn DebugDrawHeightmap(
 	}
 }
 
+fn DebugDrawColormap(
+	u32 size_log2,
+	ust::array_view_imut</Color32/> colors,
+	DrawableSurface& surface )
+{
+	var u32 size= 1u << size_log2;
+
+	assert( colors.size() == size_type( size * size ) );
+
+	for( var u32 mut y= 0u; y < size; ++y )
+	{
+		auto src_line= colors.subrange( size_type( y << size_log2 ), size_type( ( y + 1u ) << size_log2 ) );
+		auto dst_line= surface.data.subrange( size_type( y * surface.pitch ), size_type( ( y + 1u ) * surface.pitch ) );
+
+		foreach( pair : src_line.iter().zip( dst_line.iter() ) )
+		{
+			pair.second= pair.first;
+		}
+	}
+}
+
 fn DrawFPS( DrawableSurface& surface, f32 frame_duration_s )
 {
 	auto mut text= "   0.0 fps";

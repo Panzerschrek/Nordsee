@@ -162,6 +162,13 @@ fn Main() : i32
 		}
 		if( false )
 		{
+			DebugDrawColormap(
+				waves_heightmap_processor.GetHeightmapSizeLog2(),
+				waves_heightmap_processor.GetColorData(),
+				drawable_surface );
+		}
+		if( false )
+		{
 			DebugDrawSpectrum(
 				waves_heightmap_processor.GetHeightmapSizeLog2(),
 				waves_heightmap_processor.GetCurrentSpectrum(),

@@ -15,6 +15,11 @@ fn DebugDrawHeightmap(
 	ust::array_view_imut</f32/> heightmap_data,
 	DrawableSurface& surface );
 
+fn DebugDrawColormap(
+	u32 size_log2,
+	ust::array_view_imut</Color32/> colors,
+	DrawableSurface& surface );
+
 fn DrawFPS( DrawableSurface& surface, f32 frame_duration_s );
 
 fn DrawPerformanceCounters( DrawableSurface& surface, PerformanceCounters& counters );
