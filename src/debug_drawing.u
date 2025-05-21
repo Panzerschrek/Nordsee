@@ -53,6 +53,39 @@ fn DebugDrawSpectrum(
 	}
 }
 
+fn DebugDrawHeightmap(
+	u32 size_log2,
+	ust::array_view_imut</f32/> heightmap_data,
+	DrawableSurface& surface )
+{
+	var u32 size= 1u << size_log2;
+
+	assert( heightmap_data.size() == size_type( size * size ) );
+
+	var f32 mut min_height= heightmap_data.front(), mut max_height= min_height;
+
+	foreach( h : heightmap_data )
+	{
+		ust::min_assign( min_height, h );
+		ust::max_assign( max_height, h );
+	}
+
+	var f32 height_range= max_height - min_height;
+
+	for( var u32 mut y= 0u; y < size; ++y )
+	{
+		auto src_line= heightmap_data.subrange( size_type( y << size_log2 ), size_type( ( y + 1u ) << size_log2 ) );
+		auto dst_line= surface.data.subrange( size_type( y * surface.pitch ), size_type( ( y + 1u ) * surface.pitch ) );
+
+		foreach( pair : src_line.iter().zip( dst_line.iter() ) )
+		{
+			var f32 intensity= ust::max( 0.0f, ust::min( ( pair.first - min_height ) / height_range, 1.0f ) );
+			var u32 intensity_i( intensity * 255.0f );
+			pair.second= intensity_i | (intensity_i << 8u) | (intensity_i << 16u);
+		}
+	}
+}
+
 fn DrawFPS( DrawableSurface& surface, f32 frame_duration_s )
 {
 	auto mut text= "   0.0 fps";

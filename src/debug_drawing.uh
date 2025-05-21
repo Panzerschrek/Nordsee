@@ -10,6 +10,11 @@ fn DebugDrawSpectrum(
 	ust::array_view_imut</Complexf/> spectrum,
 	DrawableSurface& surface );
 
+fn DebugDrawHeightmap(
+	u32 size_log2,
+	ust::array_view_imut</f32/> heightmap_data,
+	DrawableSurface& surface );
+
 fn DrawFPS( DrawableSurface& surface, f32 frame_duration_s );
 
 fn DrawPerformanceCounters( DrawableSurface& surface, PerformanceCounters& counters );
