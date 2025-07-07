@@ -55,7 +55,8 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 	}
 	else
 	{
-		target.external_libraries.push_back( "-lSDL2" );
+		sdl_install_prefix= "/usr/local";
+		target.external_libraries.push_back( "/usr/local/lib/libSDL2.so" );
 	}
 
 	auto build_system_executable_path= build_system_interface.GetBuildSystemExecutablePath();
