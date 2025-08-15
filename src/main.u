@@ -28,7 +28,7 @@ fn Main() : i32
 
 	var u32 window_width= 1024u, window_height= 768u;
 
-	var $(SDL_Window_) window=
+	var $(SDL_Window) window=
 		unsafe( SDL_CreateWindow(
 			$<( cast_mut( "Nordsee\0"[0] ) ),
 			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
