@@ -89,7 +89,22 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 		.command= BK::CustomBuildStep::ExeCommand
 		{
 			.exe_path= cpp_header_converter_path,
-			.command_line= ust::make_array</ust::string8/>( sdl_header, "-o", sdl_header_converted, "--", "-std=c11" ),
+			.command_line= ust::make_array</ust::string8/>(
+				sdl_header,
+				"-o",
+				sdl_header_converted,
+				"--",
+				"-std=c11",
+				// Set clang "--target" option matching our current target triple.
+				ust::concat(
+					"--target=",
+					target_triple.architecture,
+					"-",
+					target_triple.vendor,
+					"-",
+					target_triple.operating_system,
+					"-",
+					target_triple.environment ) ),
 		},
 		.comment= sdl_header_converted_base_name,
 		.input_files= ust::make_array( sdl_header ),

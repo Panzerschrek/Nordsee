@@ -71,7 +71,7 @@ fn Main() : i32
 		var SDL_Event mut event= zero_init;
 		while( unsafe( SDL_PollEvent( $<(event) ) ) != 0 )
 		{
-			var SDL_EventType t( i64( event.union_contents[0] ) );
+			var SDL_EventType t( size_type( event.union_contents[0] ) );
 			if( t == SDL_QUIT )
 			{
 				break label main_loop;
