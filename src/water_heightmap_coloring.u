@@ -64,8 +64,8 @@ fn GenerateWaterHeightmapColors(
 			out_row[ size_type(x) ] =
 				Color32(
 					u32( ust::min( result_color.z, 255.0f ) ) |
-					( u32( ust::min( result_color.y, 255.0f ) ) << 8u) |
-					( u32( ust::min( result_color.x, 255.0f ) ) << 16u) );
+					( u32( ust::min( result_color.y, 255.0f ) ) << 8) |
+					( u32( ust::min( result_color.x, 255.0f ) ) << 16) );
 		}
 	}
 }
@@ -92,7 +92,7 @@ fn GenerateDebugWavesColors(
 	{
 		var f32 intensity= ust::max( 0.0f, ust::min( ( pair.first - min_height ) / height_range, 1.0f ) );
 		var u32 intensity_i( intensity * 255.0f );
-		pair.second= intensity_i | (intensity_i << 8u) | (intensity_i << 16u);
+		pair.second= intensity_i | (intensity_i << 8) | (intensity_i << 16);
 	}
 
 	var u32 heightmap_size= 1u << heightmap_size_log2;

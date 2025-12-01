@@ -32,7 +32,7 @@ fn Perform2DInverseCenteredFourierTransform(
 			{
 				h+=
 					freqs[ size_type( k | ( y << size_log2 ) ) ] *
-					Complexf::ImaginaryExponent( f32( i32(k) - i32(size >> 1u) ) * scale );
+					Complexf::ImaginaryExponent( f32( i32(k) - i32(size >> 1) ) * scale );
 			}
 
 			intermediate_buffer[ size_type( x | ( y << size_log2 ) ) ]= h;
@@ -50,7 +50,7 @@ fn Perform2DInverseCenteredFourierTransform(
 			{
 				h+=
 					intermediate_buffer[ size_type( x | ( k << size_log2 ) ) ] *
-					Complexf::ImaginaryExponent( f32( i32(k) - i32(size >> 1u) ) * scale );
+					Complexf::ImaginaryExponent( f32( i32(k) - i32(size >> 1) ) * scale );
 			}
 
 			out[ size_type( x | (y << size_log2) ) ] = h.re;
@@ -171,7 +171,7 @@ fn InverseCenteredFFT::Calculate( this, ust::array_view_imut</Complexf/> in, ust
 fn InverseCenteredFFT::CalculateSrcIndices( size_type size_log2 ) : ust::vector</u32/>
 {
 	var size_type size= 1s << size_log2;
-	var size_type half_size= size >> 1s;
+	var size_type half_size= size >> 1;
 
 	var ust::vector</u32/> mut out( size, 0u );
 

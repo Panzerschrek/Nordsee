@@ -13,7 +13,7 @@ fn GenerateWavesSpectrum( u32 size_log2 ) : ust::vector</Complexf/>
 
 	var u32 area= size * size;
 
-	var u32 half_size= size >> 1u;
+	var u32 half_size= size >> 1;
 
 	var ust::vector</Complexf/> mut freqs( size_type( area ), Complexf::Zero() );
 
@@ -95,7 +95,7 @@ fn EvaluateWavesSpectrumInTime(
 	assert( in_freqs.size() == out_freqs.size() );
 
 	var u32 heightmap_size= 1u << heightmap_size_log2;
-	var u32 half_heightmap_size= heightmap_size >> 1u;
+	var u32 half_heightmap_size= heightmap_size >> 1;
 
 	scoped_array f32 mut wave_numbers_squared[ size_type( heightmap_size ) ]( 0.0f );
 	for( auto mut i= 0u; i < heightmap_size; ++i )
@@ -142,7 +142,7 @@ fn GenerateSideShiftSpectra(
 	assert( in_freqs.size() == out_freqs_y.size() );
 
 	var u32 heightmap_size= 1u << heightmap_size_log2;
-	var u32 half_heightmap_size= heightmap_size >> 1u;
+	var u32 half_heightmap_size= heightmap_size >> 1;
 
 	assert( in_freqs.size() == size_type( heightmap_size * heightmap_size ) );
 

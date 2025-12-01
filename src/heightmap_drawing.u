@@ -16,7 +16,7 @@ fn DrawHeightmap(
 
 	var f32 max_depth = 1536.0f;
 
-	var Color32 c_sky_color= 255u | (225u << 8u) | (215u << 16u);
+	var Color32 c_sky_color= 255u | (225u << 8) | (215u << 16);
 
 	var Vec3f cam_pos= camera_controller.GetPos();
 	var f32 y_shift = ust::tan( camera_controller.GetElevation() ) + f32( surface.h ) / f32( surface.w );
@@ -50,7 +50,7 @@ fn DrawHeightmap(
 
 		var i32 mut prev_row( surface.h );
 
-		for( var f32 mut depth= start_depth[ (column >> 1u) & 1u ];
+		for( var f32 mut depth= start_depth[ (column >> 1) & 1u ];
 			depth < max_depth;
 			depth *= depth_power_factor )
 		{
