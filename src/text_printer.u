@@ -1,4 +1,4 @@
-import "text_printer.uh"
+import "text_printer.iu"
 
 namespace NS
 {

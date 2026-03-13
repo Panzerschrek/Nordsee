@@ -2,8 +2,8 @@ import "/assert.iu"
 import "/scoped_array.iu"
 import "/vector.iu"
 import "/string_conversions.iu"
-import "fourier_transform.uh"
-import "math_constants.uh"
+import "fourier_transform.iu"
+import "math_constants.iu"
 
 namespace NS
 {

@@ -1,5 +1,5 @@
 import "/minmax.iu"
-import "heightmap_drawing.uh"
+import "heightmap_drawing.iu"
 
 namespace NS
 {

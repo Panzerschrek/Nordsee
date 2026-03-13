@@ -1,6 +1,6 @@
 import "/assert.iu"
-import "/Nordsee/SDL.uh"
-import "performance_counter.uh"
+import "/Nordsee/SDL.iu"
+import "performance_counter.iu"
 
 namespace NS
 {

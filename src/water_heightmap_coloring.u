@@ -1,8 +1,8 @@
 import "/assert.iu"
 import "/math.iu"
 import "/minmax.iu"
-import "vec.uh"
-import "water_heightmap_coloring.uh"
+import "vec.iu"
+import "water_heightmap_coloring.iu"
 
 namespace NS
 {

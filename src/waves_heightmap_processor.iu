@@ -1,9 +1,9 @@
 import "/vector.iu"
-import "color.uh"
-import "complex.uh"
-import "fourier_transform.uh"
-import "performance_counters.uh"
-import "waves_heightmap.uh"
+import "color.iu"
+import "complex.iu"
+import "fourier_transform.iu"
+import "performance_counters.iu"
+import "waves_heightmap.iu"
 
 namespace NS
 {

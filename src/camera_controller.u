@@ -1,6 +1,6 @@
-import "/Nordsee/SDL.uh"
-import "camera_controller.uh"
-import "math_constants.uh"
+import "/Nordsee/SDL.iu"
+import "camera_controller.iu"
+import "math_constants.iu"
 
 namespace NS
 {

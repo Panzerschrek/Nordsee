@@ -1,4 +1,4 @@
-import "random.uh"
+import "random.iu"
 
 namespace NS
 {

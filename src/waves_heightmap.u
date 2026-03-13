@@ -1,8 +1,8 @@
 import "/assert.iu"
 import "/scoped_array.iu"
-import "gaussian_complex_random.uh"
-import "vec.uh"
-import "waves_heightmap.uh"
+import "gaussian_complex_random.iu"
+import "vec.iu"
+import "waves_heightmap.iu"
 
 namespace NS
 {

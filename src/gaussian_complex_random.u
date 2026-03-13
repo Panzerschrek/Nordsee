@@ -1,5 +1,5 @@
-import "gaussian_complex_random.uh"
-import "vec.uh"
+import "gaussian_complex_random.iu"
+import "vec.iu"
 
 namespace NS
 {

@@ -1,5 +1,5 @@
 import "/random_access_range.iu"
-import "color.uh"
+import "color.iu"
 
 namespace NS
 {

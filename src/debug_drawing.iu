@@ -1,6 +1,6 @@
-import "complex.uh"
-import "drawable_surface.uh"
-import "performance_counters.uh"
+import "complex.iu"
+import "drawable_surface.iu"
+import "performance_counters.iu"
 
 namespace NS
 {

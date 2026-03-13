@@ -1,5 +1,5 @@
-import "water_heightmap_coloring.uh"
-import "waves_heightmap_processor.uh"
+import "water_heightmap_coloring.iu"
+import "waves_heightmap_processor.iu"
 
 namespace NS
 {

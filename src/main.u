@@ -1,10 +1,10 @@
 import "/main_wrapper.iu"
 import "/stdout.iu"
-import "/Nordsee/SDL.uh"
-import "camera_controller.uh"
-import "debug_drawing.uh"
-import "heightmap_drawing.uh"
-import "waves_heightmap_processor.uh"
+import "/Nordsee/SDL.iu"
+import "camera_controller.iu"
+import "debug_drawing.iu"
+import "heightmap_drawing.iu"
+import "waves_heightmap_processor.iu"
 
 
 pretty_main
