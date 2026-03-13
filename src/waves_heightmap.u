@@ -1,5 +1,5 @@
-import "/assert.u"
-import "/scoped_array.u"
+import "/assert.iu"
+import "/scoped_array.iu"
 import "gaussian_complex_random.uh"
 import "vec.uh"
 import "waves_heightmap.uh"

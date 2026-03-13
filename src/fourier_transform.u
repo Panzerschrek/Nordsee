@@ -1,7 +1,7 @@
-import "/assert.u"
-import "/scoped_array.u"
-import "/vector.u"
-import "/string_conversions.u"
+import "/assert.iu"
+import "/scoped_array.iu"
+import "/vector.iu"
+import "/string_conversions.iu"
 import "fourier_transform.uh"
 import "math_constants.uh"
 

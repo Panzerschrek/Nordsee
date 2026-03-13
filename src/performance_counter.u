@@ -1,4 +1,4 @@
-import "/assert.u"
+import "/assert.iu"
 import "/Nordsee/SDL.uh"
 import "performance_counter.uh"
 

@@ -1,4 +1,4 @@
-import "/math.u"
+import "/math.iu"
 
 namespace NS
 {

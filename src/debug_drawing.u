@@ -1,4 +1,4 @@
-import "/assert.u"
+import "/assert.iu"
 import "debug_drawing.uh"
 import "math_constants.uh"
 import "text_printer.uh"

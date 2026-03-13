@@ -1,4 +1,4 @@
-import "/random_access_range.u"
+import "/random_access_range.iu"
 import "vec.uh"
 
 namespace NS
