@@ -95,6 +95,8 @@ fn GetPackageInfo( BK::BuildSystemInterface &mut build_system_interface ) : BK::
 				sdl_header_converted,
 				"--",
 				"-std=c11",
+				// SDL redefines "main". We don't need this, this "main" definition may conflict with our own "main".
+				"-DSDL_MAIN_HANDLED",
 				// Set clang "--target" option matching our current target triple.
 				ust::concat(
 					"--target=",
